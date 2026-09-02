@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coach's Season Planner</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app-backend.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- Auth Gate: sign in / create profile -->
+    <div id="auth-gate" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-indigo-600 px-6 py-5 text-white text-center">
+                <div class="inline-flex bg-white/20 p-2 rounded-lg mb-2">
+                    <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-lg font-bold">Coach's Season Planner</h2>
+                <p class="text-xs text-indigo-200 mt-1">Sign in to save your season permanently</p>
+            </div>
+            <div class="flex border-b border-slate-200">
+                <button type="button" id="auth-tab-signin" onclick="switchAuthMode('signin')" class="flex-1 py-2 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600">Sign In</button>
+                <button type="button" id="auth-tab-signup" onclick="switchAuthMode('signup')" class="flex-1 py-2 text-sm font-semibold text-slate-400">Create Profile</button>
+            </div>
+            <div class="p-6">
+                <p id="auth-error" class="hidden mb-4 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2"></p>
+                <form id="auth-signin-form" onsubmit="handleSignIn(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+                        <input type="email" id="signin-email" required class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="coach@team.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                        <input type="password" id="signin-password" required minlength="6" class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
+                    </div>
+                    <button type="submit" data-auth-submit class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition">Sign In</button>
+                </form>
+                <form id="auth-signup-form" onsubmit="handleSignUp(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Your Name</label>
+                        <input type="text" id="signup-name" required class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="Coach Smith">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+                        <input type="email" id="signup-email" required class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="coach@team.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                        <input type="password" id="signup-password" required minlength="6" class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="At least 6 characters">
+                    </div>
+                    <button type="submit" data-auth-submit class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition">Create Profile & Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-root" class="hidden h-screen flex flex-col overflow-hidden">
+    <!-- Top Navigation Header with 4 Core Tabs -->
+    <header class="bg-slate-900 text-white px-6 py-3 flex items-center justify-between shadow-md z-20">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-lg flex items-center justify-center">
+                <i data-lucide="clipboard-list" class="w-6 h-6 text-white"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">Hockey Coach - Season Planner</h1>
+                <p id="header-season-meta" class="text-xs text-slate-400">Total Season Length: 12 Weeks</p>
+            </div>
+        </div>
+
+        <!-- User account + Tab Switcher -->
+        <div class="flex items-center gap-4">
+        <div class="text-right hidden sm:block">
+            <p id="user-display-name" class="text-xs font-semibold text-white">Coach</p>
+            <p id="user-email" class="text-[10px] text-slate-400"></p>
+            <span id="save-status" class="text-[10px] text-slate-500"></span>
+        </div>
+        <button onclick="handleSignOut()" class="text-xs text-slate-400 hover:text-white transition px-2 py-1 rounded border border-slate-700 hover:border-slate-500">Sign Out</button>
+        <div class="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
+            <button onclick="switchTab('weekly')" id="tab-weekly" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white flex items-center gap-1.5">
+                <i data-lucide="layout-list" class="w-3.5 h-3.5"></i> Weekly Plan
+            </button>
+            <button onclick="switchTab('calendar')" id="tab-calendar" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Calendar
+            </button>
+            <button onclick="switchTab('builder')" id="tab-builder" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+                <i data-lucide="settings" class="w-3.5 h-3.5"></i> Builder
+            </button>
+            <button onclick="switchTab('metrics')" id="tab-metrics" class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+                <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i> Metrics
+            </button>
+        </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Body -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!----------------------------------------------------------------->
+        <!-- TAB 1: WEEKLY PLAN (MAIN VIEW)                             -->
+        <!----------------------------------------------------------------->
+        <main id="view-weekly" class="flex-1 flex flex-col bg-white overflow-hidden">
+            <!-- Week Selection Bar -->
+            <div class="bg-slate-100 border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button onclick="changeActiveWeek(-1)" class="p-1 bg-white border border-slate-200 hover:bg-slate-50 rounded text-slate-600 shadow-xs"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <div>
+                        <h2 id="active-week-title" class="font-bold text-slate-900 text-sm">Week 1: Sep 1 - Sep 7, 2026</h2>
+                        <p class="text-xs text-slate-500">Active Operational Focus</p>
+                    </div>
+                    <button onclick="changeActiveWeek(1)" class="p-1 bg-white border border-slate-200 hover:bg-slate-50 rounded text-slate-600 shadow-xs"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                </div>
+                
+                <!-- Quick jump dropdown for weeks -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-xs text-slate-500 font-medium">Jump to:</label>
+                    <select id="week-jump-select" onchange="jumpToWeek(this.value)" class="text-xs px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Weekly Split Content Area -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Left Sub-Pane: Tactical Notes & Daily Schedule Breakdown -->
+                <div class="flex-1 flex flex-col p-6 overflow-y-auto custom-scrollbar space-y-6">
+                    <!-- Tactical Notes -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-xs">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center justify-between">
+                            <span>Weekly Tactical & Coaching Notes</span>
+                            <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+                        </label>
+                        <textarea 
+                            id="weekly-notes-textarea" 
+                            oninput="saveWeeklyNotes(this.value)"
+                            class="w-full h-32 text-sm p-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-slate-700"
+                            placeholder="Enter game plan objectives, focus areas, or injury updates for this week..."
+                        ></textarea>
+                    </div>
+
+                    <!-- Scheduled Sessions for this specific week -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                                <i data-lucide="calendar-days" class="w-4 h-4 text-slate-400"></i>
+                                Sessions & Events This Week
+                            </h3>
+                            <button onclick="switchTab('calendar')" class="text-xs text-indigo-600 font-semibold hover:underline">Manage in Calendar</button>
+                        </div>
+                        <div id="weekly-events-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sub-Pane: Weekly Goals & Monthly Goals Container -->
+                <aside class="w-96 bg-slate-50 border-l border-slate-200 flex flex-col overflow-y-auto p-4 space-y-5 custom-scrollbar">
+                    
+                    <!-- Weekly Goals Checklist -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                                <i data-lucide="check-square" class="w-4 h-4 text-indigo-600"></i>
+                                Weekly Goals Check-off
+                            </h3>
+                            <span id="weekly-goals-counter" class="text-xs font-semibold text-indigo-600">0/0</span>
+                        </div>
+                        
+                        <div id="weekly-goals-list" class="space-y-2 mb-3 max-h-56 overflow-y-auto custom-scrollbar">
+                            <!-- Injected dynamically -->
+                        </div>
+
+                        <!-- Add Weekly Goal -->
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                            <input type="text" id="new-weekly-goal-input" placeholder="Add specific weekly goal..." class="flex-1 text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" onkeypress="handleGoalKeypress(event)">
+                            <button onclick="addWeeklyGoal()" class="bg-indigo-600 hover:bg-indigo-700 text-white p-1.5 rounded-lg transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Goals Section (Below Weekly Tab) -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                                <i data-lucide="target" class="w-4 h-4 text-emerald-600"></i>
+                                Monthly Objectives (<span id="active-month-label">September</span>)
+                            </h3>
+                        </div>
+                        
+                        <div id="monthly-goals-list" class="space-y-2 mb-3">
+                            <!-- Injected dynamically -->
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                            <input type="text" id="new-monthly-goal-input" placeholder="Add monthly objective..." class="flex-1 text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" onkeypress="handleMonthlyGoalKeypress(event)">
+                            <button onclick="addMonthlyGoal()" class="bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-lg transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+
+                </aside>
+            </div>
+        </main>
+
+        <!----------------------------------------------------------------->
+        <!-- TAB 2: CALENDAR VIEW (SECONDARY PLANNER)                   -->
+        <!----------------------------------------------------------------->
+        <main id="view-calendar" class="flex-1 flex flex-col bg-white overflow-hidden hidden">
+            <!-- Calendar Navigation Header -->
+            <div class="bg-slate-100 border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Secondary Calendar View</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex bg-white p-1 rounded-lg border border-slate-200">
+                        <button onclick="switchCalendarSubView('month')" id="btn-cal-month" class="px-3 py-1 text-xs font-semibold rounded transition-all bg-indigo-600 text-white">Month</button>
+                        <button onclick="switchCalendarSubView('week')" id="btn-cal-week" class="px-3 py-1 text-xs font-semibold rounded transition-all text-slate-600 hover:text-slate-900">Week</button>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                        <button onclick="changeCalendarDate(-1)" class="p-1 hover:bg-slate-100 rounded text-slate-600"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <span id="cal-display-date" class="text-sm font-medium w-36 text-center">September 2026</span>
+                        <button onclick="changeCalendarDate(1)" class="p-1 hover:bg-slate-100 rounded text-slate-600"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Container -->
+            <div id="calendar-grid-container" class="flex-1 flex flex-col overflow-hidden bg-slate-200">
+                <!-- Injected via JS -->
+            </div>
+        </main>
+
+        <!----------------------------------------------------------------->
+        <!-- TAB 3: SEASON BUILDER (CREATE & CONFIGURE ONGOING PLAN)    -->
+        <!----------------------------------------------------------------->
+        <main id="view-builder" class="flex-1 flex flex-col bg-slate-50 overflow-y-auto p-8 hidden">
+            <div class="max-w-4xl mx-auto w-full space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Ongoing Season Builder</h2>
+                    <p class="text-sm text-slate-500">Configure your season timeline, set start dates, total weeks, and pre-load baseline weekly goals.</p>
+                </div>
+
+                <!-- Season Configuration Card -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4 h-4 text-indigo-600"></i> Season Parameters
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Season Title</label>
+                            <input type="text" id="builder-title" value="Varsity Football - Fall Season" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Season Start Date</label>
+                            <input type="date" id="builder-start-date" value="2026-09-01" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Total Weeks in Season</label>
+                            <input type="number" id="builder-total-weeks" value="10" min="1" max="52" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    <button onclick="generateSeasonWeeks()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition shadow-sm">
+                        Re-Generate Season Timeline
+                    </button>
+                </div>
+
+                <!-- Bulk Event / Schedule Creator -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-600"></i> Add Scheduled Event
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <input type="text" id="builder-event-title" placeholder="Event Name (e.g. Game vs Rivals)" class="text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                        <input type="date" id="builder-event-date" value="2026-09-05" class="text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                        <select id="builder-event-type" class="text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                            <option value="practice">Practice</option>
+                            <option value="game">Game</option>
+                            <option value="film">Film Session</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="office">Off-ice</option>
+                        </select>
+                        <button onclick="builderAddEvent()" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition">Add Event</button>
+                    </div>
+                </div>
+
+                <!-- Season Overview List -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                        <i data-lucide="list" class="w-4 h-4 text-indigo-600"></i> Configured Season Weeks & Goals Overview
+                    </h3>
+                    <div id="builder-weeks-preview" class="space-y-3">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!----------------------------------------------------------------->
+        <!-- TAB 4: METRICS & ANALYTICS DASHBOARD                       -->
+        <!----------------------------------------------------------------->
+        <main id="view-metrics" class="flex-1 flex flex-col bg-slate-50 overflow-y-auto p-8 hidden">
+            <div class="max-w-5xl mx-auto w-full space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Season Metrics & Analytics</h2>
+                    <p class="text-sm text-slate-500">Aggregated breakdown of scheduled sessions, categorical distribution, and goal-completion metrics.</p>
+                </div>
+
+                <!-- Summary Counter Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Sessions</p>
+                            <h3 id="metric-total-sessions" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                        <div class="bg-indigo-50 p-3 rounded-lg text-indigo-600"><i data-lucide="calendar" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Practices & Games</p>
+                            <h3 id="metric-prac-games" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                        <div class="bg-emerald-50 p-3 rounded-lg text-emerald-600"><i data-lucide="activity" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Weekly Goals Completed</p>
+                            <h3 id="metric-weekly-goals" class="text-2xl font-bold text-indigo-600 mt-1">0/0</h3>
+                        </div>
+                        <div class="bg-indigo-50 p-3 rounded-lg text-indigo-600"><i data-lucide="check-square" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Goals Completed</p>
+                            <h3 id="metric-monthly-goals" class="text-2xl font-bold text-emerald-600 mt-1">0/0</h3>
+                        </div>
+                        <div class="bg-emerald-50 p-3 rounded-lg text-emerald-600"><i data-lucide="target" class="w-6 h-6"></i></div>
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown & Visual Sidebar Graphs -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Left Column: Categorical Metrics Table/List -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4 md:col-span-1 flex flex-col">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i> Event Breakdown
+                        </h3>
+                        <div class="space-y-3 flex-1">
+                            <div class="flex items-center justify-between p-2 bg-emerald-50 border border-emerald-100 rounded-lg text-xs">
+                                <span class="font-semibold text-emerald-800">Practices</span>
+                                <span id="count-practice" class="font-bold text-emerald-900 px-2 py-0.5 bg-white rounded shadow-2xs">0</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-rose-50 border border-rose-100 rounded-lg text-xs">
+                                <span class="font-semibold text-rose-800">Games</span>
+                                <span id="count-game" class="font-bold text-rose-900 px-2 py-0.5 bg-white rounded shadow-2xs">0</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-xs">
+                                <span class="font-semibold text-indigo-800">Off-ice</span>
+                                <span id="count-office" class="font-bold text-indigo-900 px-2 py-0.5 bg-white rounded shadow-2xs">0</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-amber-50 border border-amber-100 rounded-lg text-xs">
+                                <span class="font-semibold text-amber-800">Film Sessions</span>
+                                <span id="count-film" class="font-bold text-amber-900 px-2 py-0.5 bg-white rounded shadow-2xs">0</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-sky-50 border border-sky-100 rounded-lg text-xs">
+                                <span class="font-semibold text-sky-800">Meetings</span>
+                                <span id="count-meeting" class="font-bold text-sky-900 px-2 py-0.5 bg-white rounded shadow-2xs">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Nice Sidebar Graphs (Visual Progress Bars) -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-5 md:col-span-2">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-600"></i> Category Distribution Graphs
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <!-- Practice Bar -->
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                    <span>Practices</span>
+                                    <span id="bar-val-practice">0</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                    <div id="bar-practice" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Games Bar -->
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                    <span>Games</span>
+                                    <span id="bar-val-game">0</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                    <div id="bar-game" class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Off-ice Bar -->
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                    <span>Off-ice</span>
+                                    <span id="bar-val-office">0</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                    <div id="bar-office" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Film Session Bar -->
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                    <span>Film Sessions</span>
+                                    <span id="bar-val-film">0</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                    <div id="bar-film" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Meetings Bar -->
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                    <span>Meetings</span>
+                                    <span id="bar-val-meeting">0</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                    <div id="bar-meeting" class="bg-sky-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+    </div>
+    </div><!-- /app-root -->
+
+    <!-- Application Script Logic -->
+    <script>
+        // Core Database State
+        let seasonConfig = {
+            title: "Hockey Coach - Season Planner",
+            startDate: "2026-09-01",
+            totalWeeks: 10
+        };
+
+        let weeksData = []; 
+        let monthlyGoals = [
+           
+        ];
+        
+        let events = getDefaultEvents();
+
+        let activeWeekIndex = 0;
+        let calendarSubView = 'month';
+        let calendarCurrentDate = new Date(2026, 8, 1);
+
+        const typeStyles = {
+            practice: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            game: 'bg-rose-50 text-rose-700 border-rose-200 font-bold',
+            film: 'bg-amber-50 text-amber-700 border-amber-200',
+            meeting: 'bg-sky-50 text-sky-700 border-sky-200',
+            office: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+        };
+
+        function getDefaultEvents() {
+            return [
+                { id: 1, title: 'Introduce D-Zone Coverage', date: '2026-09-01', type: 'meeting', time: '15:30' },
+                { id: 2, title: 'Defensive Walkthrough', date: '2026-09-03', type: 'practice', time: '16:00' },
+                { id: 3, title: 'Film Review vs Tigers', date: '2026-09-04', type: 'film', time: '18:00' },
+                { id: 4, title: 'AWAY GAME @ Wildcats', date: '2026-09-05', type: 'game', time: '19:00' },
+                { id: 5, title: 'Dryland Mechanics', date: '2026-09-07', type: 'meeting', time: '14:00' },
+                { id: 6, title: 'Introduce O-Zone Pressure', date: '2026-09-09', type: 'practice', time: '15:30' },
+                { id: 7, title: 'HOME GAME vs Eagles', date: '2026-09-12', type: 'game', time: '19:00' },
+                { id: 8, title: 'Team Dryland Session', date: '2026-09-14', type: 'office', time: '10:00' }
+            ];
+        }
+
+        function getPlannerState() {
+            return {
+                seasonConfig: { ...seasonConfig },
+                weeksData: JSON.parse(JSON.stringify(weeksData)),
+                monthlyGoals: JSON.parse(JSON.stringify(monthlyGoals)),
+                events: JSON.parse(JSON.stringify(events)),
+                activeWeekIndex,
+                calendarSubView,
+                calendarCurrentDate: calendarCurrentDate.toISOString()
+            };
+        }
+
+        function applyPlannerState(data) {
+            if (!data) return false;
+
+            if (data.seasonConfig) seasonConfig = data.seasonConfig;
+            if (data.weeksData) weeksData = data.weeksData;
+            if (data.monthlyGoals) monthlyGoals = data.monthlyGoals;
+            if (data.events) events = data.events;
+            if (typeof data.activeWeekIndex === 'number') activeWeekIndex = data.activeWeekIndex;
+            if (data.calendarSubView) calendarSubView = data.calendarSubView;
+            if (data.calendarCurrentDate) calendarCurrentDate = new Date(data.calendarCurrentDate);
+
+            document.getElementById('builder-title').value = seasonConfig.title;
+            document.getElementById('builder-start-date').value = seasonConfig.startDate;
+            document.getElementById('builder-total-weeks').value = seasonConfig.totalWeeks;
+            document.getElementById('header-season-meta').textContent = `Total Season Length: ${seasonConfig.totalWeeks} Weeks`;
+
+            return true;
+        }
+
+        function persistPlanner() {
+            if (window.PlannerBackend) {
+                window.PlannerBackend.showSaveStatus('saving');
+                window.PlannerBackend.scheduleSave();
+            }
+        }
+
+        window.getPlannerState = getPlannerState;
+
+        window.onPlannerLoaded = function(plannerData) {
+            const loaded = applyPlannerState(plannerData);
+            if (!loaded || weeksData.length === 0) {
+                generateSeasonWeeks(false);
+            } else {
+                populateWeekDropdown();
+                renderActiveWeekView();
+                renderBuilderPreview();
+            }
+            switchTab('weekly');
+            lucide.createIcons();
+        };
+
+        // Initialize App on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            if (window.FIREBASE_CONFIG) {
+                window.PlannerBackend.init(window.FIREBASE_CONFIG);
+            }
+        });
+
+        // Tab Navigation Switcher
+        function switchTab(tabId) {
+            document.getElementById('view-weekly').classList.add('hidden');
+            document.getElementById('view-calendar').classList.add('hidden');
+            document.getElementById('view-builder').classList.add('hidden');
+            document.getElementById('view-metrics').classList.add('hidden');
+
+            document.getElementById('tab-weekly').className = "px-3 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white flex items-center gap-1.5";
+            document.getElementById('tab-calendar').className = "px-3 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white flex items-center gap-1.5";
+            document.getElementById('tab-builder').className = "px-3 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white flex items-center gap-1.5";
+            document.getElementById('tab-metrics').className = "px-3 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white flex items-center gap-1.5";
+
+            if (tabId === 'weekly') {
+                document.getElementById('view-weekly').classList.remove('hidden');
+                document.getElementById('tab-weekly').className = "px-3 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white flex items-center gap-1.5";
+                renderActiveWeekView();
+            } else if (tabId === 'calendar') {
+                document.getElementById('view-calendar').classList.remove('hidden');
+                document.getElementById('tab-calendar').className = "px-3 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white flex items-center gap-1.5";
+                renderCalendar();
+            } else if (tabId === 'builder') {
+                document.getElementById('view-builder').classList.remove('hidden');
+                document.getElementById('tab-builder').className = "px-3 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white flex items-center gap-1.5";
+                renderBuilderPreview();
+            } else if (tabId === 'metrics') {
+                document.getElementById('view-metrics').classList.remove('hidden');
+                document.getElementById('tab-metrics').className = "px-3 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white flex items-center gap-1.5";
+                renderMetricsView();
+            }
+            lucide.createIcons();
+        }
+
+        // Season Generator Logic
+        function generateSeasonWeeks(preserveExisting = true) {
+            const startInput = document.getElementById('builder-start-date').value;
+            const totalWeeksInput = parseInt(document.getElementById('builder-total-weeks').value) || 10;
+            const titleInput = document.getElementById('builder-title').value;
+
+            seasonConfig.startDate = startInput;
+            seasonConfig.totalWeeks = totalWeeksInput;
+            seasonConfig.title = titleInput;
+
+            document.getElementById('header-season-meta').textContent = `Total Season Length: ${totalWeeksInput} Weeks`;
+
+            let curr = new Date(startInput);
+            let newWeeks = [];
+
+            for (let i = 0; i < totalWeeksInput; i++) {
+                let weekStart = new Date(curr);
+                let weekEnd = new Date(curr);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+
+                let existing = preserveExisting ? weeksData[i] : null;
+
+                newWeeks.push({
+                    weekNum: i + 1,
+                    startDate: weekStart.toISOString().split('T')[0],
+                    endDate: weekEnd.toISOString().split('T')[0],
+                    notes: existing ? existing.notes : (i === 0 ? "Focus heavily on holding the zone" : "Standard weekly prep block."),
+                    goals: existing ? existing.goals : [
+                        { id: Date.now() + i*10 + 1, text: "Complete installation of base packages", completed: i === 0 },
+                        { id: Date.now() + i*10 + 2, text: "Review opponent tape with positional units", completed: false }
+                    ]
+                });
+
+                curr.setDate(curr.getDate() + 7);
+            }
+
+            weeksData = newWeeks;
+            populateWeekDropdown();
+            renderActiveWeekView();
+            renderBuilderPreview();
+            persistPlanner();
+        }
+
+        function populateWeekDropdown() {
+            const select = document.getElementById('week-jump-select');
+            select.innerHTML = weeksData.map((w, idx) => `
+                <option value="${idx}" ${idx === activeWeekIndex ? 'selected' : ''}>
+                    Week ${w.weekNum} (${formatDateStr(w.startDate)} - ${formatDateStr(w.endDate)})
+                </option>
+            `).join('');
+        }
+
+        function formatDateStr(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+        }
+
+        // Weekly Plan View Logic
+        function changeActiveWeek(direction) {
+            let newIdx = activeWeekIndex + direction;
+            if (newIdx >= 0 && newIdx < weeksData.length) {
+                activeWeekIndex = newIdx;
+                document.getElementById('week-jump-select').value = activeWeekIndex;
+                renderActiveWeekView();
+                persistPlanner();
+            }
+        }
+
+        function jumpToWeek(val) {
+            activeWeekIndex = parseInt(val);
+            renderActiveWeekView();
+            persistPlanner();
+        }
+
+        function renderActiveWeekView() {
+            if (weeksData.length === 0) return;
+            const week = weeksData[activeWeekIndex];
+
+            document.getElementById('active-week-title').textContent = `Week ${week.weekNum}: ${formatDateStr(week.startDate)} - ${formatDateStr(week.endDate)}, ${new Date(week.startDate).getFullYear()}`;
+            document.getElementById('weekly-notes-textarea').value = week.notes;
+
+            // Render goals checklist
+            const goalsListContainer = document.getElementById('weekly-goals-list');
+            const counterContainer = document.getElementById('weekly-goals-counter');
+            const completedCount = week.goals.filter(g => g.completed).length;
+            counterContainer.textContent = `${completedCount}/${week.goals.length}`;
+
+            goalsListContainer.innerHTML = week.goals.map(g => `
+                <label class="flex items-start space-x-2.5 p-2 rounded-lg hover:bg-slate-50 transition cursor-pointer group">
+                    <input type="checkbox" ${g.completed ? 'checked' : ''} onchange="toggleWeeklyGoal(${g.id})" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-xs text-slate-700 leading-snug flex-1 ${g.completed ? 'line-through text-slate-400' : ''}">${g.text}</span>
+                    <button onclick="deleteWeeklyGoal(${g.id}, event)" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 transition">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </label>
+            `).join('');
+
+            // Render events falling in this week's date bracket with delete button
+            const eventsContainer = document.getElementById('weekly-events-list');
+            const weekEvents = events.filter(e => e.date >= week.startDate && e.date <= week.endDate);
+
+            eventsContainer.innerHTML = weekEvents.length === 0 
+                ? '<p class="text-xs text-slate-400 col-span-2 italic bg-slate-50 p-4 rounded-lg text-center">No scheduled events logged for this week.</p>'
+                : weekEvents.map(ev => `
+                    <div class="p-3 rounded-lg border text-xs shadow-xs ${typeStyles[ev.type] || 'bg-slate-100'} flex items-center justify-between group">
+                        <div class="flex-1 truncate pr-2">
+                            <div class="font-bold truncate">${ev.title}</div>
+                            <div class="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">
+                                <i data-lucide="calendar" class="w-3 h-3"></i> ${formatDateStr(ev.date)} &bull; ${ev.time} (${ev.type})
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[10px] uppercase font-semibold px-2 py-0.5 bg-white/60 rounded">${ev.type}</span>
+                            <button onclick="deleteEvent(${ev.id})" class="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-600 transition bg-white/80 rounded" title="Delete event">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+            renderMonthlyGoals();
+            lucide.createIcons();
+        }
+
+        function saveWeeklyNotes(val) {
+            weeksData[activeWeekIndex].notes = val;
+            persistPlanner();
+        }
+
+        // Delete Event Method
+        function deleteEvent(id) {
+            events = events.filter(e => e.id !== id);
+            renderActiveWeekView();
+            if (!document.getElementById('view-calendar').classList.contains('hidden')) {
+                renderCalendar();
+            }
+            if (!document.getElementById('view-builder').classList.contains('hidden')) {
+                renderBuilderPreview();
+            }
+            if (!document.getElementById('view-metrics').classList.contains('hidden')) {
+                renderMetricsView();
+            }
+            persistPlanner();
+        }
+
+        // Weekly Goals Actions
+        function handleGoalKeypress(e) {
+            if (e.key === 'Enter') addWeeklyGoal();
+        }
+
+        function addWeeklyGoal() {
+            const input = document.getElementById('new-weekly-goal-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            weeksData[activeWeekIndex].goals.push({
+                id: Date.now(),
+                text: text,
+                completed: false
+            });
+
+            input.value = '';
+            renderActiveWeekView();
+            persistPlanner();
+        }
+
+        function toggleWeeklyGoal(id) {
+            const goal = weeksData[activeWeekIndex].goals.find(g => g.id === id);
+            if (goal) {
+                goal.completed = !goal.completed;
+                renderActiveWeekView();
+                persistPlanner();
+            }
+        }
+
+        function deleteWeeklyGoal(id, e) {
+            e.preventDefault();
+            weeksData[activeWeekIndex].goals = weeksData[activeWeekIndex].goals.filter(g => g.id !== id);
+            renderActiveWeekView();
+            persistPlanner();
+        }
+
+        // Monthly Goals Actions
+        function renderMonthlyGoals() {
+            const container = document.getElementById('monthly-goals-list');
+            document.getElementById('active-month-label').textContent = new Date(weeksData[activeWeekIndex].startDate + 'T00:00:00').toLocaleString('default', { month: 'long' });
+
+            container.innerHTML = monthlyGoals.map(mg => `
+                <label class="flex items-start space-x-2 p-1.5 rounded hover:bg-slate-50 transition cursor-pointer group">
+                    <input type="checkbox" ${mg.completed ? 'checked' : ''} onchange="toggleMonthlyGoal(${mg.id})" class="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                    <span class="text-xs text-slate-700 leading-snug flex-1 ${mg.completed ? 'line-through text-slate-400' : ''}">${mg.text}</span>
+                    <button onclick="deleteMonthlyGoal(${mg.id}, event)" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                </label>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function handleMonthlyGoalKeypress(e) {
+            if (e.key === 'Enter') addMonthlyGoal();
+        }
+
+        function addMonthlyGoal() {
+            const input = document.getElementById('new-monthly-goal-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            monthlyGoals.push({
+                id: Date.now(),
+                month: "September",
+                text: text,
+                completed: false
+            });
+
+            input.value = '';
+            renderMonthlyGoals();
+            persistPlanner();
+        }
+
+        function toggleMonthlyGoal(id) {
+            const mg = monthlyGoals.find(m => m.id === id);
+            if (mg) {
+                mg.completed = !mg.completed;
+                renderMonthlyGoals();
+                persistPlanner();
+            }
+        }
+
+        function deleteMonthlyGoal(id, e) {
+            e.preventDefault();
+            monthlyGoals = monthlyGoals.filter(m => m.id !== id);
+            renderMonthlyGoals();
+            persistPlanner();
+        }
+
+        // Metrics Tab Rendering
+        function renderMetricsView() {
+            // Count categories
+            const counts = { practice: 0, game: 0, office: 0, film: 0, meeting: 0 };
+            events.forEach(e => {
+                if (counts[e.type] !== undefined) counts[e.type]++;
+                else counts.practice++;
+            });
+
+            const total = events.length;
+            document.getElementById('metric-total-sessions').textContent = total;
+            document.getElementById('metric-prac-games').textContent = counts.practice + counts.game;
+
+            // Update text counters
+            document.getElementById('count-practice').textContent = counts.practice;
+            document.getElementById('count-game').textContent = counts.game;
+            document.getElementById('count-office').textContent = counts.office;
+            document.getElementById('count-film').textContent = counts.film;
+            document.getElementById('count-meeting').textContent = counts.meeting;
+
+            // Update graph bars and values
+            const types = ['practice', 'game', 'office', 'film', 'meeting'];
+            types.forEach(t => {
+                const val = counts[t];
+                document.getElementById(`bar-val-${t}`).textContent = val;
+                const percentage = total > 0 ? Math.round((val / total) * 100) : 0;
+                document.getElementById(`bar-${t}`).style.width = `${percentage}%`;
+            });
+
+            // Calculate goal completions
+            let totalWeeklyGoals = 0;
+            let completedWeeklyGoals = 0;
+            weeksData.forEach(w => {
+                w.goals.forEach(g => {
+                    totalWeeklyGoals++;
+                    if (g.completed) completedWeeklyGoals++;
+                });
+            });
+
+            let totalMonthlyGoals = monthlyGoals.length;
+            let completedMonthlyGoals = monthlyGoals.filter(m => m.completed).length;
+
+            document.getElementById('metric-weekly-goals').textContent = `${completedWeeklyGoals}/${totalWeeklyGoals}`;
+            document.getElementById('metric-monthly-goals').textContent = `${completedMonthlyGoals}/${totalMonthlyGoals}`;
+        }
+
+        // Secondary Calendar View Logic
+        function switchCalendarSubView(subView) {
+            calendarSubView = subView;
+            document.getElementById('btn-cal-month').className = subView === 'month' ? "px-3 py-1 text-xs font-semibold rounded transition-all bg-indigo-600 text-white" : "px-3 py-1 text-xs font-semibold rounded transition-all text-slate-600 hover:text-slate-900";
+            document.getElementById('btn-cal-week').className = subView === 'week' ? "px-3 py-1 text-xs font-semibold rounded transition-all bg-indigo-600 text-white" : "px-3 py-1 text-xs font-semibold rounded transition-all text-slate-600 hover:text-slate-900";
+            renderCalendar();
+            persistPlanner();
+        }
+
+        function changeCalendarDate(direction) {
+            if (calendarSubView === 'month') {
+                calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + direction);
+            } else {
+                calendarCurrentDate.setDate(calendarCurrentDate.getDate() + (direction * 7));
+            }
+            renderCalendar();
+            persistPlanner();
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-grid-container');
+            const label = document.getElementById('cal-display-date');
+
+            if (calendarSubView === 'month') {
+                const year = calendarCurrentDate.getFullYear();
+                const month = calendarCurrentDate.getMonth();
+                label.textContent = `${calendarCurrentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+                container.innerHTML = generateMonthGrid(year, month);
+            } else {
+                const startOfWeek = new Date(calendarCurrentDate);
+                const day = startOfWeek.getDay();
+                const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+                startOfWeek.setDate(diff);
+
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+                label.textContent = `${formatDateStr(startOfWeek.toISOString().split('T')[0])} - ${formatDateStr(endOfWeek.toISOString().split('T')[0])}`;
+                container.innerHTML = generateWeekGrid(startOfWeek);
+            }
+            lucide.createIcons();
+        }
+
+        function generateMonthGrid(year, month) {
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const adjustedFirstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+            const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            let html = `
+                <div class="grid grid-cols-7 bg-slate-100 border-b border-slate-200 text-center py-2 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    ${weekdays.map(d => `<div>${d}</div>`).join('')}
+                </div>
+                <div class="flex-1 grid grid-cols-7 grid-rows-5 bg-slate-200 gap-px">
+            `;
+
+            let dayCount = 1;
+            for (let i = 0; i < 35; i++) {
+                let cellDateStr = '';
+                let isCurrentMonth = false;
+
+                if (i >= adjustedFirstDay && dayCount <= totalDays) {
+                    cellDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayCount).padStart(2, '0')}`;
+                    isCurrentMonth = true;
+                }
+
+                const dayEvents = isCurrentMonth ? events.filter(e => e.date === cellDateStr) : [];
+
+                html += `
+                    <div class="bg-white p-2 flex flex-col overflow-hidden ${!isCurrentMonth ? 'bg-slate-50/50 text-slate-300' : 'text-slate-700'}">
+                        <div class="text-xs font-semibold mb-1">${isCurrentMonth ? dayCount : ''}</div>
+                        <div class="flex-1 overflow-y-auto space-y-1 custom-scrollbar">
+                            ${dayEvents.map(ev => `
+                                <div class="text-[10px] px-1.5 py-0.5 rounded border truncate flex items-center justify-between group ${typeStyles[ev.type] || 'bg-slate-100'}">
+                                    <span class="truncate">${ev.title}</span>
+                                    <button onclick="deleteEvent(${ev.id})" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-600 transition ml-1" title="Delete">
+                                        &times;
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                if (isCurrentMonth) dayCount++;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function generateWeekGrid(startDate) {
+            let days = [];
+            let curr = new Date(startDate);
+            for (let i = 0; i < 7; i++) {
+                days.push({
+                    name: curr.toLocaleDateString('default', { weekday: 'short' }),
+                    dateNum: curr.getDate(),
+                    dateStr: curr.toISOString().split('T')[0]
+                });
+                curr.setDate(curr.getDate() + 1);
+            }
+
+            return `
+                <div class="flex-1 grid grid-cols-7 bg-slate-200 gap-px overflow-hidden">
+                    ${days.map(d => {
+                        const dayEvents = events.filter(e => e.date === d.dateStr);
+                        return `
+                            <div class="bg-white flex flex-col h-full overflow-hidden">
+                                <div class="p-3 bg-slate-50 border-b border-slate-200 text-center">
+                                    <span class="block text-xs font-semibold text-slate-400 uppercase">${d.name}</span>
+                                    <span class="text-sm font-bold text-slate-800">${d.dateNum}</span>
+                                </div>
+                                <div class="flex-1 p-2 overflow-y-auto space-y-2 custom-scrollbar">
+                                    ${dayEvents.map(ev => `
+                                        <div class="p-2 rounded-lg border text-xs shadow-xs flex items-center justify-between group ${typeStyles[ev.type] || 'bg-slate-100'}">
+                                            <div class="truncate flex-1">
+                                                <div class="font-semibold truncate">${ev.title}</div>
+                                                <div class="text-[10px] opacity-80 mt-0.5">${ev.time} (${ev.type})</div>
+                                            </div>
+                                            <button onclick="deleteEvent(${ev.id})" class="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-600 transition bg-white/80 rounded" title="Delete event">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Builder Tab Preview & Event Creator
+        function renderBuilderPreview() {
+            const container = document.getElementById('builder-weeks-preview');
+            container.innerHTML = weeksData.map(w => `
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs">
+                    <div>
+                        <span class="font-bold text-slate-900">Week ${w.weekNum}</span>
+                        <span class="text-slate-500 ml-2">${formatDateStr(w.startDate)} - ${formatDateStr(w.endDate)}</span>
+                    </div>
+                    <div class="text-slate-600 font-medium">
+                        ${w.goals.length} Goals Logged &bull; ${events.filter(e => e.date >= w.startDate && e.date <= w.endDate).length} Scheduled Sessions
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function builderAddEvent() {
+            const title = document.getElementById('builder-event-title').value.trim();
+            const date = document.getElementById('builder-event-date').value;
+            const type = document.getElementById('builder-event-type').value;
+
+            if (!title || !date) {
+                alert('Please fill out event title and date.');
+                return;
+            }
+
+            events.push({
+                id: Date.now(),
+                title: title,
+                date: date,
+                type: type,
+                time: '16:00'
+            });
+
+            document.getElementById('builder-event-title').value = '';
+            alert('Event added successfully to the ongoing schedule!');
+            renderBuilderPreview();
+            renderActiveWeekView();
+            persistPlanner();
+        }
+    </script>
+</body>
+</html>

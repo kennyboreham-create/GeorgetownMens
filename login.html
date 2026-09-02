@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coaching Hockey Made Easy - Login / Register</title>
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex items-center justify-center min-h-screen bg-slate-900 text-slate-100 p-4">
+
+  <div class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6">
+    <div class="text-center space-y-2">
+      <a href="/" class="inline-block w-14 h-14 rounded-xl overflow-hidden border border-slate-600" title="Product home">
+        <img src="/img/logo.jpeg" alt="Coaching Hockey Made Easy" class="w-full h-full object-cover">
+      </a>
+      <h1 class="text-2xl font-bold">Coaching Hockey Made Easy</h1>
+      <p class="text-slate-400 text-sm">Head Coach Registration & Workspace Portal</p>
+      <p class="text-xs text-slate-500"><a href="/" class="text-blue-400 hover:text-blue-300">See More</a></p>
+    </div>
+
+    <!-- Toggle Tabs -->
+    <div class="flex border-b border-slate-700 text-center font-medium">
+      <button id="tabLoginBtn" onclick="switchForm('login')" class="flex-1 py-2 border-b-2 border-blue-500 text-blue-400">Login</button>
+      <button id="tabRegisterBtn" onclick="switchForm('register')" class="flex-1 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200">Register Head Coach</button>
+    </div>
+
+    <!-- Notification Banner -->
+    <div id="alertBox" class="hidden p-3 rounded-lg text-sm font-medium"></div>
+
+    <!-- Login Form -->
+    <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+      <div>
+        <label for="loginEmail" class="block text-xs uppercase text-slate-400 mb-1">Email</label>
+        <input type="email" id="loginEmail" required autocomplete="email" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label for="loginPassword" class="block text-xs uppercase text-slate-400 mb-1">Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div class="text-right">
+        <button type="button" onclick="showForgotPassword()" class="text-sm text-blue-400 hover:text-blue-300">
+          Forgot password?
+        </button>
+      </div>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 font-bold py-2.5 rounded-lg transition shadow-lg">Log In</button>
+      <div id="resendVerificationBox" class="hidden text-center">
+        <button type="button" onclick="handleResendVerification()" class="text-sm text-blue-400 hover:text-blue-300 underline">
+          Resend verification email
+        </button>
+      </div>
+    </form>
+
+    <!-- Forgot Password Form -->
+    <form id="forgotForm" onsubmit="handleForgotPassword(event)" class="hidden space-y-4">
+      <p class="text-sm text-slate-400">Enter your coach account email and we’ll send a reset link.</p>
+      <div>
+        <label for="forgotEmail" class="block text-xs uppercase text-slate-400 mb-1">Email</label>
+        <input type="email" id="forgotEmail" required autocomplete="email" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-blue-600 font-bold py-2.5 rounded-lg transition shadow-lg">Send Reset Link</button>
+      <div class="text-center">
+        <button type="button" onclick="switchForm('login')" class="text-sm text-slate-400 hover:text-slate-200">
+          Back to login
+        </button>
+      </div>
+    </form>
+
+    <!-- Head Coach Registration Form -->
+    <form id="registerForm" onsubmit="handleRegister(event)" class="hidden space-y-4">
+      <div>
+        <label for="regName" class="block text-xs uppercase text-slate-400 mb-1">Full Name</label>
+        <input type="text" id="regName" required autocomplete="name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label for="regTeamName" class="block text-xs uppercase text-slate-400 mb-1">Team Name</label>
+        <input type="text" id="regTeamName" placeholder="e.g. Halton Hills Thunder U13A" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label for="regEmail" class="block text-xs uppercase text-slate-400 mb-1">Email</label>
+        <input type="email" id="regEmail" required autocomplete="email" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label for="regPassword" class="block text-xs uppercase text-slate-400 mb-1">Password</label>
+        <input type="password" id="regPassword" required autocomplete="new-password" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-2.5 rounded-lg transition shadow-lg">Register & Send Verification Email</button>
+    </form>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+</body>
+</html>
