@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription library admin — Coaching Hockey Made Easy</title>
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <header class="sticky top-0 z-40 bg-slate-800 border-b border-slate-700 px-3 sm:px-6 py-3 flex justify-between items-center gap-2">
+    <div class="min-w-0">
+      <h1 class="font-bold text-base sm:text-lg">Subscription library</h1>
+      <p id="adminUserInfo" class="text-xs text-slate-400 truncate">Admin</p>
+    </div>
+    <button type="button" id="adminLogoutBtn" class="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded font-medium min-h-[44px]">Logout</button>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <p class="text-sm text-slate-400">Videos and playbooks added here show up on the Skills Library for teams with a paid plan. They do not count against team storage. Playbooks use the same section editor as the team playbook.</p>
+    <p id="adminStatus" class="hidden text-sm"></p>
+
+    <section class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-4">
+      <h2 class="text-xl font-semibold">Add a video</h2>
+      <form id="videoForm" class="grid sm:grid-cols-2 gap-3">
+        <input type="hidden" id="videoId">
+        <div class="sm:col-span-2">
+          <label class="block text-xs uppercase text-slate-400 mb-1" for="videoTitle">Title</label>
+          <input id="videoTitle" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs uppercase text-slate-400 mb-1" for="videoTopic">Topic</label>
+          <select id="videoTopic" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></select>
+        </div>
+        <div>
+          <label class="block text-xs uppercase text-slate-400 mb-1" for="videoLevel">Level (1 to 10)</label>
+          <select id="videoLevel" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+            <option value="4">Level 4</option>
+            <option value="5">Level 5</option>
+            <option value="6">Level 6</option>
+            <option value="7">Level 7</option>
+            <option value="8">Level 8</option>
+            <option value="9">Level 9</option>
+            <option value="10">Level 10</option>
+          </select>
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs uppercase text-slate-400 mb-1" for="videoUrl">YouTube URL</label>
+          <input id="videoUrl" type="url" required placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs uppercase text-slate-400 mb-1" for="videoDescription">Description</label>
+          <textarea id="videoDescription" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+        <div class="sm:col-span-2 flex flex-wrap gap-2">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2 rounded-lg text-sm">Save video</button>
+          <button type="button" id="videoResetBtn" class="bg-slate-700 hover:bg-slate-600 font-semibold px-4 py-2 rounded-lg text-sm">Clear</button>
+        </div>
+      </form>
+      <div id="videoList" class="space-y-2"></div>
+    </section>
+
+    <section class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-4">
+      <h2 class="text-xl font-semibold">Subscription playbooks</h2>
+      <p class="text-sm text-slate-400">Save the title and category, then open the editor to add the same sections coaches use: rules, backbone, systems, and the rest.</p>
+      <form id="playbookForm" class="grid sm:grid-cols-2 gap-3">
+        <input type="hidden" id="playbookId">
+        <div>
+          <label class="block text-xs uppercase text-slate-400 mb-1" for="playbookTitle">Title</label>
+          <input id="playbookTitle" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs uppercase text-slate-400 mb-1" for="playbookCategory">Category</label>
+          <select id="playbookCategory" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></select>
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs uppercase text-slate-400 mb-1" for="playbookSummary">Summary</label>
+          <textarea id="playbookSummary" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+        <div class="sm:col-span-2 flex flex-wrap gap-2">
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 font-semibold px-4 py-2 rounded-lg text-sm">Save details</button>
+          <button type="button" id="playbookResetBtn" class="bg-slate-700 hover:bg-slate-600 font-semibold px-4 py-2 rounded-lg text-sm">Clear</button>
+        </div>
+      </form>
+      <div id="playbookList" class="space-y-2"></div>
+    </section>
+  </main>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/adminLibrary.js?v=skill-level-2"></script>
+</body>
+</html>

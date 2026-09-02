@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skills Library — Coaching Hockey Made Easy</title>
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+  <header class="sticky top-0 z-40 bg-slate-800 border-b border-slate-700 px-3 sm:px-6 py-3 flex justify-between items-center gap-2">
+    <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+      <a href="/dashboard.html" class="w-10 h-10 rounded-lg overflow-hidden bg-slate-900 border border-slate-700 shrink-0" title="Back to workspace" aria-label="Back to workspace">
+        <img src="/img/logo.jpeg" alt="Coaching Hockey Made Easy" class="w-full h-full object-cover">
+      </a>
+      <div class="min-w-0">
+        <h1 class="font-bold text-base sm:text-lg truncate">Skills Library</h1>
+        <p id="pageUserInfo" class="text-xs text-slate-400 truncate">Monthly plan</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <a href="/dashboard.html" class="hidden sm:inline-flex text-sm bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded font-medium min-h-[44px] items-center">Workspace</a>
+      <button type="button" onclick="localStorage.clear(); location.href='/login.html'" class="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded font-medium min-h-[44px]">Logout</button>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-10">
+    <section class="space-y-4">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">For coaches who want an edge</p>
+      <h2 class="text-3xl sm:text-4xl font-bold leading-tight">Coach better. Prep faster. Teach the game with a system.</h2>
+      <p class="text-slate-300 text-lg leading-relaxed max-w-2xl">
+        Stop rebuilding practice from a blank page. A paid plan gives you coach-ready skills videos, coaching tips, and system playbooks so you spend less time hunting for material and more time teaching your team.
+      </p>
+    </section>
+
+    <section class="grid sm:grid-cols-2 gap-4">
+      <article class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-2">
+        <p class="text-xs uppercase tracking-wide text-slate-400">Plus</p>
+        <p class="text-2xl font-bold">$9.99<span class="text-base font-medium text-slate-400">/mo</span></p>
+        <p class="text-lg font-semibold text-slate-200">$99<span class="text-sm font-medium text-slate-400">/yr</span></p>
+        <p class="text-sm text-slate-300">Teach from a bigger toolkit. Skills videos, coaching tips, and preset playbooks plus 10 GB for the film you review.</p>
+        <div id="plusPlanActions" class="hidden flex flex-wrap gap-2">
+          <button type="button" onclick="requestPlan('plus', 'monthly')" class="text-sm bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2 rounded-lg">Plus monthly</button>
+          <button type="button" onclick="requestPlan('plus', 'yearly')" class="text-sm bg-slate-700 hover:bg-slate-600 font-semibold px-4 py-2 rounded-lg">Plus yearly</button>
+        </div>
+      </article>
+      <article class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-2">
+        <p class="text-xs uppercase tracking-wide text-slate-400">Premium</p>
+        <p class="text-2xl font-bold">$17.99<span class="text-base font-medium text-slate-400">/mo</span></p>
+        <p class="text-lg font-semibold text-slate-200">$179<span class="text-sm font-medium text-slate-400">/yr</span></p>
+        <p class="text-sm text-slate-300">Same coaching tools, 20 GB of room. Keep more games in the library so last month’s film is still there when you need it.</p>
+        <div id="premiumPlanActions" class="hidden flex flex-wrap gap-2">
+          <button type="button" onclick="requestPlan('premium', 'monthly')" class="text-sm bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2 rounded-lg">Premium monthly</button>
+          <button type="button" onclick="requestPlan('premium', 'yearly')" class="text-sm bg-slate-700 hover:bg-slate-600 font-semibold px-4 py-2 rounded-lg">Premium yearly</button>
+        </div>
+      </article>
+    </section>
+    <p id="planStatus" class="text-sm text-slate-400 hidden"></p>
+    <p id="assistantNote" class="hidden text-sm text-slate-400">Ask the head coach to add or update a paid plan from Team Management. Assistants share the same team storage and library.</p>
+
+    <section class="space-y-3">
+      <h3 class="text-xl font-semibold">Keep the film that makes you a better coach</h3>
+      <ul class="text-slate-300 space-y-2 text-sm leading-relaxed">
+        <li>Review last night’s game tomorrow. Extra storage means you keep the files you actually teach from not just the last upload that fit.</li>
+        <li>Plus takes you to 10 GB. Premium to 20 GB. Room to build a real teaching library through the season.</li>
+        <li>One number on Team Management. You always know how much space the team has left.</li>
+      </ul>
+    </section>
+
+    <section class="space-y-4">
+      <h3 class="text-xl font-semibold">Show the skill. Don’t just talk about it.</h3>
+      <p class="text-sm text-slate-400">Pull up a clip in a meeting, send it to a player after practice, or use it to tighten your own teaching. Coach-ready videos cover:</p>
+      <div id="topicOverview" class="flex flex-wrap gap-2">
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Skating</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Edgework</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Stickhandling</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Shooting</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Goalies</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Systems</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Strategy</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Coaching tips</span>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <h3 class="text-xl font-semibold">Walk into practice with a plan already drawn</h3>
+      <p class="text-sm text-slate-400">Ready-to-run system guides so you are not starting from zero. Install one this week, then tailor it to your roster:</p>
+      <div id="playbookOverview" class="flex flex-wrap gap-2">
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Breakout</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Forecheck</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Neutral zone</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Power play</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Penalty kill</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Faceoffs</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Offensive zone</span>
+        <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 text-sm text-slate-200">Defensive zone</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    const currentUser = (() => {
+      try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+    })();
+
+    if (currentUser?.role === 'ADMIN') {
+      window.location.replace('/admin.html');
+    } else if (!localStorage.getItem('token') || !currentUser || currentUser.role === 'PLAYER') {
+      localStorage.clear();
+      window.location.href = '/login.html';
+    } else {
+      document.getElementById('pageUserInfo').textContent =
+        `${currentUser.teamName || 'Team'} · ${currentUser.name || ''}`.trim();
+      bootSkillsLanding();
+    }
+
+    async function bootSkillsLanding() {
+      let data = null;
+      try {
+        data = JSON.parse(sessionStorage.getItem('skillsLibraryGate') || 'null');
+      } catch {
+        data = null;
+      }
+
+      if (!(data && data.unlocked === false)) {
+        try {
+          data = await apiFetch('/skills-library');
+          sessionStorage.setItem('skillsLibraryGate', JSON.stringify(data));
+        } catch (err) {
+          if (!data) {
+            const status = document.getElementById('planStatus');
+            status.classList.remove('hidden');
+            status.textContent = err.message || 'Could not load plan details.';
+            return;
+          }
+        }
+      }
+
+      if (data.unlocked) {
+        window.location.replace('/dashboard.html#tab-skills-library');
+        return;
+      }
+
+      if (currentUser.role === 'HEAD_COACH') {
+        document.getElementById('plusPlanActions').classList.remove('hidden');
+        document.getElementById('premiumPlanActions').classList.remove('hidden');
+      } else {
+        document.getElementById('assistantNote').classList.remove('hidden');
+      }
+    }
+
+    async function requestPlan(planId, interval = 'monthly') {
+      const status = document.getElementById('planStatus');
+      status.classList.remove('hidden');
+      status.className = 'text-sm text-slate-400';
+      status.textContent = 'Saving plan request…';
+      try {
+        const result = await apiFetch('/team/subscription', {
+          method: 'POST',
+          body: JSON.stringify({ plan: planId, interval })
+        });
+        status.className = 'text-sm text-slate-300';
+        status.textContent = result.message || 'Plan request saved. PayPal checkout will confirm payment.';
+        if (result.checkout?.url) {
+          window.location.href = result.checkout.url;
+          return;
+        }
+        if (result.activated) {
+          sessionStorage.removeItem('skillsLibraryGate');
+          window.location.replace('/dashboard.html#tab-skills-library');
+        }
+      } catch (err) {
+        status.className = 'text-sm text-red-400';
+        status.textContent = err.message;
+      }
+    }
+  </script>
+</body>
+</html>

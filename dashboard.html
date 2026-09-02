@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Coaching Hockey Made Easy</title>
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .whiteboard-board {
+      position: relative;
+      width: 100%;
+      height: min(78vh, 820px);
+      min-height: 520px;
+      border: 2px solid #94a3b8;
+      border-radius: 12px;
+      overflow: hidden;
+      background-color: #ffffff;
+    }
+    .whiteboard-rink-img {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 58%;
+      object-fit: contain;
+      object-position: center bottom;
+      pointer-events: none;
+      z-index: 0;
+      background-color: #dbeafe;
+    }
+    .whiteboard-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+    }
+    .whiteboard-item-delete {
+      position: absolute;
+      top: -10px;
+      right: -12px;
+      width: 22px;
+      height: 22px;
+      border-radius: 9999px;
+      border: 0;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 13px;
+      line-height: 18px;
+      cursor: pointer;
+      display: none;
+    }
+    .whiteboard-item:hover .whiteboard-item-delete {
+      display: block;
+    }
+    .library-tip-bubble {
+      position: absolute;
+      left: 1.25rem;
+      top: calc(100% - 0.15rem);
+      z-index: 40;
+      width: min(22rem, calc(100% - 2.5rem));
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.5rem;
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #e2e8f0;
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1.45;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+    }
+    .library-tip:hover .library-tip-bubble,
+    .library-tip:focus-visible .library-tip-bubble {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .whiteboard-item.has-link {
+      color: #2563eb;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    @media (max-width: 767px) {
+      #sidebarNav {
+        position: fixed;
+        top: var(--app-header-height, 4.25rem);
+        bottom: 0;
+        left: 0;
+        z-index: 45;
+        width: min(16rem, 86vw);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: #1e293b;
+        box-shadow: 8px 0 28px rgba(0, 0, 0, 0.4);
+      }
+      #sidebarNav.is-open {
+        transform: translateX(0);
+      }
+      body.mobile-nav-open {
+        overflow: hidden;
+      }
+      #rosterListContainer table {
+        width: 100%;
+      }
+      #rosterListContainer thead {
+        display: none;
+      }
+      #rosterListContainer tbody,
+      #rosterListContainer tr,
+      #rosterListContainer td {
+        display: block;
+      }
+      #rosterListContainer tr {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #334155;
+      }
+      #rosterListContainer tr:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+      #rosterListContainer td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.35rem 0;
+        min-width: 0;
+      }
+      #rosterListContainer td::before {
+        content: attr(data-label);
+        color: #94a3b8;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+      }
+      #rosterListContainer td > select {
+        max-width: none;
+        width: min(100%, 14rem);
+      }
+    }
+    @media (hover: none) {
+      .whiteboard-item-delete {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 flex flex-col min-h-screen min-h-[100dvh]">
+
+  <!-- App Header Bar -->
+  <header id="appHeader" class="sticky top-0 z-50 bg-slate-800 border-b border-slate-700 px-3 sm:px-6 py-3 flex justify-between items-center gap-2">
+    <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+      <button type="button" id="mobileNavToggle" class="md:hidden shrink-0 w-11 h-11 rounded-lg bg-slate-700 hover:bg-slate-600 flex items-center justify-center" onclick="toggleMobileNav()" aria-label="Open menu" aria-controls="sidebarNav" aria-expanded="false">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <div class="w-10 h-10 rounded-lg overflow-hidden bg-slate-900 border border-slate-700 shrink-0">
+        <img src="/img/logo.jpeg" alt="Coaching Hockey Made Easy" class="w-full h-full object-cover">
+      </div>
+      <div class="min-w-0">
+        <h1 id="appTeamName" class="font-bold text-base sm:text-lg truncate">Team Hub</h1>
+        <p id="appUserInfo" class="text-xs text-slate-400 truncate">Loading User...</p>
+      </div>
+    </div>
+    <button onclick="logout()" class="shrink-0 text-sm bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded transition font-medium min-h-[44px]">Logout</button>
+  </header>
+
+  <!-- Workspace Split -->
+  <div class="flex flex-1 min-h-0 overflow-hidden">
+    <div id="sidebarBackdrop" class="hidden md:hidden fixed inset-0 z-40 bg-black/60" onclick="closeMobileNav()"></div>
+    <!-- Sidebar Navigation -->
+    <aside id="sidebarNav" class="w-64 bg-slate-800/50 border-r border-slate-700 p-4 space-y-1 flex-shrink-0 flex flex-col h-full overflow-y-auto">
+      <!-- Injected dynamically by dashboard.js based on user role -->
+    </aside>
+
+    <!-- Content Workspace -->
+    <main class="flex-1 p-4 sm:p-6 overflow-y-auto min-w-0">
+      
+      <!-- TAB 1: Video Snippet Creator -->
+      <section id="tab-snippet-creator" class="tab-content hidden space-y-4">
+        <h2 class="text-2xl font-bold">Video Snippet Creator</h2>
+        
+        <div id="fileSelector" class="border-2 border-dashed border-slate-700 rounded-xl p-6 sm:p-12 text-center bg-slate-800/30">
+          <p class="text-slate-400 mb-4">Browse videos from your team library to open the snippet studio</p>
+          <button onclick="openVideoBrowser()" class="bg-blue-600 hover:bg-blue-500 font-semibold px-6 py-2.5 rounded-lg shadow-lg transition">Browse Videos</button>
+        </div>
+
+        <div id="videoBrowserModal" class="hidden fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4" onclick="if(event.target===this) closeVideoBrowser()">
+          <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center p-4 border-b border-slate-700">
+              <h3 class="font-bold text-lg">Select a Video</h3>
+              <button onclick="closeVideoBrowser()" class="text-slate-400 hover:text-white text-2xl leading-none px-2">&times;</button>
+            </div>
+            <div id="videoBrowserList" class="p-4 space-y-2 overflow-y-auto flex-1"></div>
+          </div>
+        </div>
+
+        <div id="videoEditor" class="hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-slate-400">Now editing: <span id="currentVideoTitle" class="text-slate-200 font-semibold"></span></p>
+          </div>
+          <div id="videoContainer" class="relative bg-black rounded-xl overflow-hidden aspect-video flex justify-center items-center border border-slate-800 shadow-2xl">
+            <button onclick="closeCurrentVideo()" title="Close video" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-slate-900/80 hover:bg-red-600 border border-slate-600 text-slate-200 text-xl leading-none transition">&times;</button>
+            <video id="mainVideoPlayer" class="w-full h-full relative z-0" controls></video>
+            <div id="videoOverlayLayer" class="absolute inset-0 z-[5] w-full h-full pointer-events-none"></div>
+          </div>
+
+          <!-- Overlay Tools -->
+          <div id="overlayToolbar" class="flex flex-wrap items-center gap-2 bg-slate-800 p-3 rounded-lg border border-slate-700">
+            <span class="text-xs text-slate-400 font-semibold uppercase tracking-wide mr-1">Overlays</span>
+            <button type="button" id="btnAddArrow" class="overlay-tool-btn bg-amber-600 hover:bg-amber-500 text-sm font-semibold px-3 py-1.5 rounded transition flex items-center gap-1.5" draggable="false">
+              <!-- Parent container controls the baseline size (e.g., 24px) -->
+              <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M4 20 L20 4 M20 4 H10 M20 4 V14"/>
+              </svg>
+              Add Arrow
+            </button>
+            <div class="flex items-center gap-2 flex-1 min-w-0 w-full sm:min-w-[220px]">
+              <input type="text" id="speakerTextInput" placeholder="Speaker text..." class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm flex-1 focus:outline-none focus:border-emerald-500">
+              <button type="button" id="btnPlaceSpeak" class="overlay-tool-btn bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold px-3 py-1.5 rounded transition whitespace-nowrap" draggable="false">Place &amp; Speak</button>
+            </div>
+            <button type="button" id="cancelSpeakerBtn" class="hidden bg-slate-700 hover:bg-slate-600 text-sm font-semibold px-3 py-1.5 rounded transition">Cancel</button>
+            <button type="button" id="btnMuteVideo" title="Mute game audio (speaker TTS still works)" class="bg-slate-700 hover:bg-slate-600 text-sm font-semibold px-3 py-1.5 rounded transition whitespace-nowrap border border-slate-500">Mute Video</button>
+          </div>
+
+          <!-- Snippet title + Quick Tag Creator -->
+          <div class="flex flex-col gap-2 bg-slate-800 p-3 rounded-lg border border-slate-700">
+            <div class="flex items-center space-x-2">
+              <label for="snippetTitleInput" class="text-xs text-slate-400 font-semibold uppercase tracking-wide whitespace-nowrap">Title</label>
+              <input type="text" id="snippetTitleInput" placeholder="Snippet title" maxlength="120" class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm flex-1 focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <input type="text" id="quickTagInput" placeholder="Add tag (e.g. Breakout, PowerPlay, Forecheck)" onkeydown="if(event.key==='Enter'){event.preventDefault();addGlobalTag();}" class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm flex-1 min-w-0 focus:outline-none focus:border-blue-500">
+                <button onclick="addGlobalTag()" class="bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold px-4 py-1.5 rounded transition shrink-0">Apply Tag</button>
+              </div>
+              <div id="activeTagsContainer" class="flex space-x-1 overflow-x-auto"></div>
+            </div>
+          </div>
+
+          <!-- 5 Control Hotkey Buttons -->
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+            <button id="btnPlay" onclick="playVideo()" class="bg-emerald-600 hover:bg-emerald-500 font-bold py-3 min-h-[44px] rounded-lg text-center transition text-sm sm:text-base"><span class="sm:hidden">Play</span><span class="hidden sm:inline">1 - Play Video</span></button>
+            <button id="btnStop" onclick="stopVideo()" class="bg-amber-600 hover:bg-amber-500 font-bold py-3 min-h-[44px] rounded-lg text-center transition text-sm sm:text-base"><span class="sm:hidden">Stop</span><span class="hidden sm:inline">2 - Stop Video</span></button>
+            <button id="btnRec1" onclick="toggleRecord(0)" class="bg-slate-700 hover:bg-slate-600 font-bold py-3 min-h-[44px] rounded-lg border border-slate-500 text-center transition text-sm sm:text-base">3 - Rec 1</button>
+            <button id="btnRec2" onclick="toggleRecord(1)" class="bg-slate-700 hover:bg-slate-600 font-bold py-3 min-h-[44px] rounded-lg border border-slate-500 text-center transition text-sm sm:text-base">4 - Rec 2</button>
+            <button id="btnRec3" onclick="toggleRecord(2)" class="bg-slate-700 hover:bg-slate-600 font-bold py-3 min-h-[44px] rounded-lg border border-slate-500 text-center transition text-sm sm:text-base col-span-2 sm:col-span-1">5 - Rec 3</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: View Videos & Snippets -->
+      <section id="tab-view-videos" class="tab-content hidden space-y-4">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+          <h2 class="text-2xl font-bold">Videos & Snippet Library</h2>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+            <select id="videoTagFilter" onchange="filterVideos()" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 min-h-[44px] focus:outline-none focus:border-blue-500 text-sm text-slate-200 w-full sm:w-auto">
+              <option value="">All tags</option>
+            </select>
+            <input type="text" id="videoSearchInput" onkeyup="filterVideos()" placeholder="Search tags or titles..." class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 min-h-[44px] w-full md:w-72 focus:outline-none focus:border-blue-500 text-sm">
+          </div>
+        </div>
+
+        <div class="bg-slate-800 border border-slate-700 rounded-xl">
+          <button type="button" class="library-tip relative w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-slate-700/40 transition rounded-xl" onclick="toggleLibraryPanel('uploadVideoPanelBody', this)" aria-expanded="false" aria-controls="uploadVideoPanelBody" aria-describedby="uploadVideoTip">
+            <h3 class="font-semibold text-lg text-blue-400">Upload Video from Computer</h3>
+            <span id="uploadVideoTip" role="tooltip" class="library-tip-bubble">Upload game footage so that you can create fast snippets of each shift.</span>
+            <span class="library-panel-chevron text-slate-400 text-sm transition-transform" aria-hidden="true">▼</span>
+          </button>
+          <div id="uploadVideoPanelBody" class="hidden px-5 pb-5 space-y-3 border-t border-slate-700/80">
+            <form onsubmit="handleVideoUpload(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end pt-3">
+              <div class="md:col-span-1">
+                <label class="text-xs text-slate-400 block mb-1">Title</label>
+                <input type="text" id="uploadVideoTitle" placeholder="Game vs Team X" required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div class="md:col-span-1">
+                <label class="text-xs text-slate-400 block mb-1">Tags (optional)</label>
+                <input type="text" id="uploadVideoTags" placeholder="PowerPlay, Forecheck" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div class="md:col-span-1">
+                <label class="text-xs text-slate-400 block mb-1">Video File</label>
+                <input type="file" id="uploadVideoFile" accept="video/*" required class="w-full text-sm text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-slate-700 file:text-slate-200">
+              </div>
+              <div class="md:col-span-1">
+                <button type="submit" id="uploadVideoBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-2 rounded text-sm transition">Upload to Library</button>
+              </div>
+            </form>
+            <p id="uploadQuotaNote" class="text-xs text-slate-500 hidden"></p>
+            <p id="uploadVideoStatus" class="text-xs text-slate-400 hidden"></p>
+          </div>
+        </div>
+
+        <div id="insertYouTubePanel" class="hidden bg-slate-800 border border-slate-700 rounded-xl">
+          <button type="button" class="library-tip relative w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-slate-700/40 transition" onclick="toggleLibraryPanel('insertYouTubePanelBody', this)" aria-expanded="false" aria-controls="insertYouTubePanelBody" aria-describedby="insertYouTubeTip">
+            <h3 class="font-semibold text-lg text-blue-400">Insert YouTube Video</h3>
+            <span id="insertYouTubeTip" role="tooltip" class="library-tip-bubble">There are a lot of great videos on YouTube. Find sections of videos that you like so you don't have to show the player the whole video.</span>
+            <span class="library-panel-chevron text-slate-400 text-sm transition-transform" aria-hidden="true">▼</span>
+          </button>
+          <div id="insertYouTubePanelBody" class="hidden px-5 pb-5 space-y-3 border-t border-slate-700/80">
+            <p class="text-xs text-slate-400 pt-3">Paste a YouTube link and set the start/stop window players will see.</p>
+            <form onsubmit="handleInsertYouTube(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Title</label>
+                <input type="text" id="insertYtTitle" placeholder="Breakout drill clip" required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div class="md:col-span-2">
+                <label class="text-xs text-slate-400 block mb-1">YouTube URL</label>
+                <input type="url" id="insertYtUrl" placeholder="https://www.youtube.com/watch?v=..." required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Tags (optional)</label>
+                <input type="text" id="insertYtTags" placeholder="PowerPlay, Forecheck" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Start (mm:ss or seconds)</label>
+                <input type="text" id="insertYtStart" placeholder="0:30" required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Stop (mm:ss or seconds)</label>
+                <input type="text" id="insertYtStop" placeholder="1:30" required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div class="md:col-span-3">
+                <button type="submit" id="insertYtBtn" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 font-bold py-2 px-6 rounded text-sm transition">Insert Video</button>
+              </div>
+            </form>
+            <p id="insertYtStatus" class="text-xs text-slate-400 hidden"></p>
+          </div>
+        </div>
+
+        <div id="videoGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Populated dynamically via snippetEngine.js / dashboard.js -->
+        </div>
+      </section>
+
+      <!-- TAB 3: Team Roster & Manage (Head Coach only) -->
+      <section id="tab-team-manage" class="tab-content hidden space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-2xl font-bold">Team Management</h2>
+          <button type="button" id="emailPlaybookToTeamBtn" onclick="emailPlaybookToTeam()" class="bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2 rounded-lg text-sm transition">
+            Email playbook to team
+          </button>
+        </div>
+
+        <div id="teamStorageCard" class="bg-slate-800 border border-slate-700 p-5 rounded-xl space-y-3">
+          <p class="text-xs uppercase tracking-wide text-slate-400 font-semibold">Team storage</p>
+          <p id="teamStorageTotal" class="text-3xl font-bold text-white">—</p>
+          <div class="h-1.5 rounded-full bg-slate-900 overflow-hidden">
+            <div id="teamStorageBar" class="h-full w-0 bg-blue-500 transition-all"></div>
+          </div>
+          <p id="teamStorageTeam" class="text-sm text-slate-300">Loading usage for your team…</p>
+          <p id="teamStoragePlan" class="text-sm text-slate-400"></p>
+          <button type="button" id="storagePlansToggle" class="text-xs text-slate-400 hover:text-slate-200 underline underline-offset-2" onclick="toggleStoragePlans()">Need more storage?</button>
+          <div id="storagePlansPanel" class="hidden pt-2 border-t border-slate-700/80 space-y-3">
+            <p id="storagePlansHeading" class="text-sm font-semibold text-slate-200">Storage plans</p>
+            <p id="storagePlansCopy" class="text-xs text-slate-500">Paid plans raise the cap and include skill videos plus preset playbooks. If you already subscribe, you can switch plan or billing here. Payment will go through PayPal.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-3 space-y-2">
+                <p class="text-sm font-semibold text-slate-200">Plus</p>
+                <p class="text-xs text-slate-400">10 GB · skills library</p>
+                <p class="text-xs text-slate-300">$9.99/mo or $99/yr</p>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" data-plan-action="plus:monthly" onclick="requestStoragePlan('plus', 'monthly')" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded">Plus monthly</button>
+                  <button type="button" data-plan-action="plus:yearly" onclick="requestStoragePlan('plus', 'yearly')" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded">Plus yearly</button>
+                </div>
+              </div>
+              <div class="bg-slate-900/70 border border-slate-700 rounded-lg p-3 space-y-2">
+                <p class="text-sm font-semibold text-slate-200">Premium</p>
+                <p class="text-xs text-slate-400">20 GB · skills library</p>
+                <p class="text-xs text-slate-300">$17.99/mo or $179/yr</p>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" data-plan-action="premium:monthly" onclick="requestStoragePlan('premium', 'monthly')" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded">Premium monthly</button>
+                  <button type="button" data-plan-action="premium:yearly" onclick="requestStoragePlan('premium', 'yearly')" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded">Premium yearly</button>
+                </div>
+              </div>
+            </div>
+            <p id="storagePlanStatus" class="text-xs text-slate-400 hidden"></p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Add Player Form -->
+          <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl space-y-3">
+            <h3 class="font-semibold text-lg text-blue-400">Add Player</h3>
+            <form onsubmit="handleAddPlayer(event)" class="space-y-3">
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Full Name</label>
+                <input type="text" id="pName" placeholder="Player Name" required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Jersey #</label>
+                <input type="number" id="pJersey" placeholder="Jersey Number" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Email Address</label>
+                <input type="email" id="pEmail" placeholder="Player Email" required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              </div>
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 font-bold py-2 rounded text-sm transition">Save Player</button>
+            </form>
+          </div>
+
+          <!-- Assign Coach Form -->
+          <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl space-y-3">
+            <h3 class="font-semibold text-lg text-emerald-400">Assign Assistant Coach</h3>
+            <p class="text-xs text-slate-400">Enter their name and email. They will get a link to create their own password.</p>
+            <form onsubmit="handleAddCoach(event)" class="space-y-3">
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Coach Name</label>
+                <input type="text" id="cName" placeholder="Coach Name" required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 block mb-1">Coach Email</label>
+                <input type="email" id="cEmail" placeholder="Coach Email" required class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+              </div>
+              <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-2 rounded text-sm transition">Assign Coach</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Roster Display Table -->
+        <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl space-y-3">
+          <h3 class="font-semibold text-lg text-slate-200">Current Roster</h3>
+          <div id="rosterListContainer" class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+              <thead class="bg-slate-900/50 text-slate-400 uppercase text-xs">
+                <tr>
+                  <th class="py-2 px-3">#</th>
+                  <th class="py-2 px-3">Name</th>
+                  <th class="py-2 px-3">Email</th>
+                  <th class="py-2 px-3">Role</th>
+                  <th class="py-2 px-3">Assistant</th>
+                </tr>
+              </thead>
+              <tbody id="rosterTableBody" class="divide-y divide-slate-700/50">
+                <!-- Injected via dashboard.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Assignments (Coach View & Player Link Tracker) -->
+      <section id="tab-assignments" class="tab-content hidden space-y-6">
+        <h2 class="text-2xl font-bold">Coach Assignments & Link Tracking</h2>
+
+        <div id="assignCoachNoteSection" class="space-y-4 hidden">
+          <h3 class="text-lg font-semibold text-slate-300">Assign note to assistant</h3>
+          <form onsubmit="submitCoachNoteAssignment(event)" class="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3">
+            <select id="assignAssistantSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              <option value="">Select assistant...</option>
+            </select>
+            <textarea id="assignAssistantNote" rows="3" maxlength="4000" placeholder="What should they review or prepare?" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></textarea>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2 rounded-lg text-sm transition">Send to assistant</button>
+          </form>
+        </div>
+
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-slate-300">Assigned to me</h3>
+          <div id="myAssignmentsList" class="space-y-2"></div>
+        </div>
+        
+        <div class="space-y-4 pt-4 border-t border-slate-800">
+          <h3 class="text-lg font-semibold text-slate-300">My Notes</h3>
+          <form onsubmit="saveCoachNote(event)" class="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3">
+            <textarea id="coachNoteInput" rows="4" maxlength="4000" placeholder="Write a note for yourself..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></textarea>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2 rounded-lg text-sm transition">Save Note</button>
+          </form>
+          <div id="coachNotesList" class="space-y-2"></div>
+        </div>
+
+        <div class="space-y-4 pt-4 border-t border-slate-800">
+          <h3 class="text-lg font-semibold text-slate-300">Player Video Link Access Status</h3>
+          <div id="playerAssignmentStatusList" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- TAB 5: Player Goal Tracker -->
+      <section id="tab-player-goals" class="tab-content hidden space-y-4">
+        <h2 class="text-2xl font-bold">Player Goal Tracker (Max 3 Active)</h2>
+        <p class="text-sm text-slate-400">Click a player name to open their goals and notes. Hidden cards show only the player name.</p>
+        <div id="playerGoalsContainer" class="space-y-6"></div>
+      </section>
+
+      <!-- TAB 5b: Coach My Goals -->
+      <section id="tab-my-goals" class="tab-content hidden space-y-4">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-2xl font-bold">My Goals</h2>
+            <p class="text-sm text-slate-400 mt-1">Create up to 10 goals. Each goal has 3 steps and 6 drills. Completing a drill updates the step and goal percentages.</p>
+          </div>
+          <button type="button" onclick="switchTab('tab-team-goals')" class="text-sm bg-slate-700 hover:bg-slate-600 font-semibold px-4 py-2 min-h-[44px] rounded-lg transition">
+            Team Goals →
+          </button>
+        </div>
+        <div id="myGoalsCreatePanel" class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-4"></div>
+        <div id="myGoalsContainer" class="space-y-6"></div>
+      </section>
+
+      <!-- TAB 5c: Team Goals (linked from My Goals) -->
+      <section id="tab-team-goals" class="tab-content hidden space-y-4">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-2xl font-bold">Team Goals</h2>
+            <p class="text-sm text-slate-400 mt-1">Every coach's goals and percent complete. Steps and drills stay on My Goals.</p>
+          </div>
+          <button type="button" onclick="switchTab('tab-my-goals')" class="text-sm bg-slate-700 hover:bg-slate-600 font-semibold px-4 py-2 min-h-[44px] rounded-lg transition">
+            ← My Goals
+          </button>
+        </div>
+        <div id="teamGoalsContainer" class="space-y-6"></div>
+      </section>
+
+      <!-- TAB 6b: Skills library (included with a paid plan) -->
+      <section id="tab-skills-library" class="tab-content hidden space-y-4">
+        <h2 class="text-2xl font-bold">Skills library</h2>
+        <p id="skillsLibraryIntro" class="text-sm text-slate-400">Videos and playbooks included with your plan. Open a playbook to read the same sections as the team playbook.</p>
+        <div id="skillsLibraryList" class="space-y-3"></div>
+      </section>
+
+      <!-- TAB 6: Whiteboard -->
+      <section id="tab-whiteboard" class="tab-content hidden space-y-4">
+        <h2 class="text-2xl font-bold">Team Whiteboard</h2>
+        <p class="text-sm text-slate-400">Use this whiteboard to collaborate with the coaches</p>
+        <form onsubmit="addWhiteboardText(event)" class="flex flex-wrap items-center gap-2">
+          <input id="whiteboardTextInput" type="text" maxlength="80" placeholder="Type a word..." class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm flex-1 min-w-[180px] focus:outline-none focus:border-blue-500">
+          <input id="whiteboardLinkInput" type="text" maxlength="500" placeholder="Optional link (https://...)" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm flex-1 min-w-[180px] focus:outline-none focus:border-blue-500">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2 rounded-lg text-sm transition">Create text</button>
+          <button type="button" onclick="addWhiteboardMark('x')" class="bg-red-600 hover:bg-red-500 font-black px-4 py-2 rounded-lg text-lg leading-none transition">X</button>
+          <button type="button" onclick="addWhiteboardMark('o')" class="bg-blue-700 hover:bg-blue-600 font-black px-4 py-2 rounded-lg text-lg leading-none transition">O</button>
+        </form>
+        <div id="whiteboardBoard" class="relative w-full overflow-hidden rounded-xl border-2 border-slate-400" style="height: min(70vh, 820px); min-height: 360px; background-color: #ffffff;">
+          <img class="whiteboard-rink-img pointer-events-none" src="/img/rink.png" alt="Hockey rink" style="position:absolute;left:0;right:0;bottom:0;width:100%;height:58%;object-fit:contain;object-position:center bottom;z-index:0;background-color:#dbeafe;pointer-events:none;">
+          <div id="whiteboardLayer" class="absolute inset-0" style="z-index:5;"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div id="snippetToast" class="hidden fixed bottom-6 right-6 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-semibold opacity-0 transition-opacity duration-300"></div>
+
+  <!-- Video Preview Modal -->
+  <div id="videoPreviewModal" class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="if(event.target===this) closeVideoPreview()">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-3xl shadow-2xl">
+      <div class="flex justify-between items-center p-4 border-b border-slate-700">
+        <h3 id="videoPreviewTitle" class="font-bold text-lg">Video Preview</h3>
+        <button onclick="closeVideoPreview()" class="text-slate-400 hover:text-white text-2xl leading-none px-2">&times;</button>
+      </div>
+      <div class="p-4">
+        <div class="relative bg-black rounded-lg overflow-hidden aspect-video">
+          <video id="videoPreviewPlayer" class="w-full h-full relative z-0" controls></video>
+          <iframe id="videoPreviewYouTube" class="hidden absolute inset-0 z-[1] w-full h-full border-0" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          <div id="videoPreviewOverlayLayer" class="absolute inset-0 z-[5] w-full h-full pointer-events-none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign Video Modal -->
+  <div id="assignVideoModal" class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onclick="if(event.target===this) closeAssignModal()">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
+      <div class="flex justify-between items-center p-4 border-b border-slate-700">
+        <h3 class="font-bold text-lg">Assign to Player(s)</h3>
+        <button onclick="closeAssignModal()" class="text-slate-400 hover:text-white text-2xl leading-none px-2">&times;</button>
+      </div>
+      <div class="p-4 space-y-3 overflow-y-auto flex-1">
+        <p id="assignVideoTitle" class="text-sm text-blue-400 font-semibold"></p>
+        <label class="text-xs text-slate-400 block">Note (optional)</label>
+        <textarea id="assignVideoNote" rows="2" placeholder="Watch this breakout clip..." class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></textarea>
+        <label class="text-xs text-slate-400 block">Select player(s)</label>
+        <div id="assignPlayerList" class="space-y-2 max-h-48 overflow-y-auto"></div>
+      </div>
+      <div class="p-4 border-t border-slate-700">
+        <button id="assignVideoSubmitBtn" onclick="submitVideoAssignment()" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-2 rounded text-sm transition">Assign &amp; Send Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Bundle (Loaded in sequence) -->
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/overlayReplay.js"></script>
+  <script src="/js/snippetEngine.js"></script>
+  <script src="/js/goalsUI.js?v=mobile-2"></script>
+  <script src="/js/whiteboard.js"></script>
+  <script src="/js/dashboard.js?v=mobile-3"></script>
+</body>
+</html>

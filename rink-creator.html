@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rink Video Creator</title>
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <link rel="stylesheet" href="/css/rink-creator.css">
+</head>
+<body class="rink-creator-page">
+  <div id="rcMain" class="rc-shell hidden">
+    <div class="rc-topbar">
+      <div>
+        <h1 class="rc-title">Rink Video Creator</h1>
+        <p class="rc-sub">Draw multi-scene plays on the rink, preview, then export to the Video Library.</p>
+      </div>
+      <div class="rc-top-actions">
+        <a class="rc-link" href="/dashboard.html">Dashboard</a>
+        <a class="rc-link" href="/dashboard.html#tab-view-videos">Video Library</a>
+      </div>
+    </div>
+
+    <div class="rc-toolbar" role="toolbar" aria-label="Drawing tools">
+      <span class="rc-tool-label">Tools</span>
+      <button type="button" class="rc-tool" data-tool="x" title="Place X" aria-pressed="false">X</button>
+      <button type="button" class="rc-tool" data-tool="o" title="Place O" aria-pressed="false">O</button>
+      <button type="button" class="rc-tool" data-tool="line" title="Draw a freehand line with arrow (curve or straight)" aria-pressed="false">→</button>
+      <button type="button" class="rc-tool" data-tool="puck" title="Small puck" aria-pressed="false">●</button>
+      <button type="button" class="rc-tool" data-tool="pylon" title="Orange pylon" aria-pressed="false">▲</button>
+      <button type="button" class="rc-tool" data-tool="delete" title="Tap an object to delete it" aria-pressed="false">⌫</button>
+      <div class="rc-sep" aria-hidden="true"></div>
+      <button type="button" class="rc-btn" id="rcClearScene">Clear scene</button>
+      <span class="rc-hint">Eraser or right-click to delete · drag to move · line tool: click and drag freehand</span>
+    </div>
+
+    <div class="rc-scene-bar">
+      <div class="rc-scene-pill" id="rcSceneLabel">Scene 1 / 1</div>
+      <button type="button" class="rc-btn" id="rcPrevScene">Prev scene</button>
+      <button type="button" class="rc-btn" id="rcNextScene">Next scene</button>
+      <div class="rc-sep" aria-hidden="true"></div>
+      <button type="button" class="rc-btn rc-btn-warn" id="rcPlay">Play</button>
+      <button type="button" class="rc-btn rc-btn-success" id="rcCreate">Create</button>
+      <span class="rc-hint">Play once through scenes (2s each). Create exports WebM to the library.</span>
+    </div>
+
+    <div class="rc-board-wrap" id="rcBoardWrap">
+      <canvas id="rcCanvas" width="1100" height="520" aria-label="Rink drawing board"></canvas>
+    </div>
+
+    <p class="rc-status" id="rcStatus"></p>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/rink-creator.js"></script>
+</body>
+</html>

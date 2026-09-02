@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Playbook</title>
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <link rel="stylesheet" href="/css/playbook.css">
+</head>
+<body class="playbook-page">
+  <div class="pb-shell">
+    <!-- Password gate -->
+    <div id="pbGate" class="pb-gate hidden">
+      <h1 id="pbGateTitle">Team Playbook</h1>
+      <p>Enter the playbook password to view this team's playbook.</p>
+      <form id="pbGateForm">
+        <div class="pb-field">
+          <label for="pbGatePassword">Password</label>
+          <input id="pbGatePassword" type="password" required autocomplete="current-password" placeholder="Playbook password">
+        </div>
+        <p id="pbGateMsg" class="pb-msg pb-msg-error hidden"></p>
+        <button type="submit" id="pbGateSubmit" class="pb-btn pb-btn-primary" style="width:100%">Open Playbook</button>
+      </form>
+      <p style="margin-top:1rem"><a class="pb-link" data-playbook-back href="/dashboard.html">Back to app</a></p>
+    </div>
+
+    <!-- Main playbook -->
+    <div id="pbMain" class="hidden">
+      <div class="pb-topbar">
+        <div>
+          <h1 id="pbPageTitle" class="pb-title">Team Playbook</h1>
+          <p id="pbModeLabel" class="pb-msg" style="color:#94a3b8;margin:0.25rem 0 0"></p>
+        </div>
+        <div class="pb-actions">
+          <a class="pb-link" data-playbook-back href="/dashboard.html">Dashboard</a>
+          <button type="button" id="pbCreateBtn" class="pb-btn pb-btn-primary hidden">Create Playbook</button>
+        </div>
+      </div>
+
+      <div id="pbCreatePanel" class="pb-form hidden">
+        <p style="margin:0 0 0.75rem;color:#94a3b8;font-size:0.9rem">Set a password for your shareable playbook link. Viewers will need this password.</p>
+        <form id="pbCreateForm" class="pb-form-grid">
+          <div class="pb-field">
+            <label for="pbCreatePassword">Playbook password</label>
+            <input id="pbCreatePassword" type="password" required minlength="4" placeholder="At least 4 characters">
+          </div>
+          <div class="pb-field">
+            <label for="pbCreatePassword2">Confirm password</label>
+            <input id="pbCreatePassword2" type="password" required minlength="4">
+          </div>
+          <p id="pbCreateMsg" class="pb-msg hidden"></p>
+          <button type="submit" class="pb-btn pb-btn-primary">Create Playbook</button>
+        </form>
+      </div>
+
+      <div id="pbShareBox" class="pb-share-box hidden">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.25rem">Shareable link</div>
+          <code id="pbShareUrl"></code>
+          <p class="pb-share-note">share this for your team to see</p>
+        </div>
+        <button type="button" id="pbCopyShare" class="pb-btn">Copy link</button>
+        <button type="button" id="pbChangePwBtn" class="pb-btn hidden">Change password</button>
+      </div>
+
+      <div id="pbChangePwPanel" class="pb-form hidden">
+        <form id="pbChangePwForm" class="pb-form-grid">
+          <div class="pb-field">
+            <label for="pbNewPassword">New playbook password</label>
+            <input id="pbNewPassword" type="password" required minlength="4">
+          </div>
+          <p id="pbChangePwMsg" class="pb-msg hidden"></p>
+          <button type="submit" class="pb-btn pb-btn-primary">Save password</button>
+        </form>
+      </div>
+
+      <div id="pbEmptyState" class="pb-section hidden">
+        <p class="pb-coming-soon" style="margin:0">No playbook yet. Head coaches can create one with the button above.</p>
+      </div>
+
+      <div id="pbSections"></div>
+    </div>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/playbook.js"></script>
+</body>
+</html>

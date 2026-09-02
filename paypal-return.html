@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPal checkout — Coaching Hockey Made Easy</title>
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
+  <main class="max-w-md w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-3 text-center">
+    <h1 class="text-xl font-semibold">Finishing PayPal checkout</h1>
+    <p id="paypalReturnStatus" class="text-sm text-slate-400">Confirming your subscription…</p>
+    <p class="text-xs text-slate-500">You can close this tab if you are taken back to the dashboard.</p>
+  </main>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    (async function confirmPayPalReturn() {
+      const status = document.getElementById('paypalReturnStatus');
+      const params = new URLSearchParams(window.location.search);
+      const subscriptionId = params.get('subscription_id') || params.get('subscriptionId');
+      const user = (() => {
+        try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+      })();
+
+      if (!localStorage.getItem('token') || !user) {
+        window.location.replace('/login.html');
+        return;
+      }
+      if (!subscriptionId) {
+        status.textContent = 'PayPal did not return a subscription id. Open Team Management and check your plan.';
+        window.setTimeout(() => { window.location.replace('/dashboard.html#tab-team-manage'); }, 2500);
+        return;
+      }
+
+      try {
+        const result = await apiFetch('/team/subscription/paypal-confirm', {
+          method: 'POST',
+          body: JSON.stringify({ subscriptionId })
+        });
+        status.textContent = result.activated
+          ? 'Your paid plan is active. Taking you back to the dashboard…'
+          : (result.message || 'PayPal saved the checkout. Taking you back…');
+      } catch (err) {
+        status.textContent = err.message || 'Could not confirm PayPal checkout.';
+      }
+      window.setTimeout(() => { window.location.replace('/dashboard.html#tab-team-manage'); }, 1600);
+    })();
+  </script>
+</body>
+</html>

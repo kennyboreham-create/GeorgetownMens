@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free Hockey Coaching & Video Analysis Software | Coaching Hockey Made Easy</title>
+  <meta name="description" content="Cut game film into quick snippets, assign video homework to players, and track watch time—all in one free hockey coaching workspace.">
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg" alt="logo">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Coaching Hockey Made Easy",
+    "operatingSystem": "Web",
+    "applicationCategory": "SportsApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Oswald', 'Impact', 'sans-serif'],
+            sans: ['Source Sans 3', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            ice: '#7dd3fc',
+            crease: '#1d4ed8'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+      background: #0b1220;
+    }
+    .font-display { font-family: Oswald, Impact, sans-serif; letter-spacing: 0.02em; }
+    .rink-hero {
+      background-color: #0b1220;
+      background-image:
+        radial-gradient(ellipse 42% 58% at 78% 42%, rgba(29, 78, 216, 0.28), transparent 70%),
+        radial-gradient(circle at 18% 72%, rgba(125, 211, 252, 0.08), transparent 40%),
+        linear-gradient(180deg, #0b1220 0%, #0f172a 55%, #0b1220 100%);
+    }
+    .rink-lines {
+      background-image:
+        linear-gradient(90deg, transparent 0, transparent calc(50% - 1px), rgba(239, 68, 68, 0.35) 50%, transparent calc(50% + 1px)),
+        linear-gradient(90deg, transparent 0, transparent 22%, rgba(59, 130, 246, 0.22) 22%, rgba(59, 130, 246, 0.22) calc(22% + 2px), transparent calc(22% + 2px)),
+        linear-gradient(90deg, transparent 0, transparent 78%, rgba(59, 130, 246, 0.22) 78%, rgba(59, 130, 246, 0.22) calc(78% + 2px), transparent calc(78% + 2px)),
+        radial-gradient(circle at 50% 50%, transparent 11.5%, rgba(226, 232, 240, 0.12) 12%, rgba(226, 232, 240, 0.12) 12.4%, transparent 12.6%);
+      background-size: 100% 100%;
+    }
+    .ice-card {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.96));
+      box-shadow: inset 0 1px 0 rgba(125, 211, 252, 0.08);
+    }
+    .stripe {
+      background: repeating-linear-gradient(
+        -55deg,
+        rgba(15, 23, 42, 0.4),
+        rgba(15, 23, 42, 0.4) 8px,
+        rgba(29, 78, 216, 0.12) 8px,
+        rgba(29, 78, 216, 0.12) 16px
+      );
+    }
+    @media (max-width: 639px) {
+      .site-header-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.5rem;
+      }
+      .site-header-nav {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-100 antialiased">
+
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 bg-blue-600 px-3 py-2 rounded">Skip to content</a>
+
+  <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
+    <div class="site-header-bar max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <a href="/" class="flex items-center gap-2.5 min-w-0">
+        <span class="shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-slate-900 border border-slate-700">
+          <img src="/img/logo.jpeg" alt="Coaching Hockey Made Easy" class="w-full h-full object-cover">
+        </span>
+        <span class="min-w-0">
+          <span class="font-display text-lg sm:text-xl tracking-wide block leading-tight truncate">Coaching Hockey Made Easy</span>
+          <span class="text-[11px] uppercase tracking-[0.16em] text-sky-300/80">Coach workspace</span>
+        </span>
+      </a>
+      <nav class="site-header-nav flex items-center justify-end gap-1 sm:gap-4 text-sm w-full sm:w-auto">
+        <a href="#features" class="hidden sm:inline text-slate-300 hover:text-white">Features</a>
+        <a href="#how" class="hidden sm:inline text-slate-300 hover:text-white">How it works</a>
+        <a href="/blog/" class="text-slate-300 hover:text-white px-2 sm:px-0 py-2 min-h-[44px] inline-flex items-center">Blog</a>
+        <a href="/login.html" class="text-slate-300 hover:text-white px-3 py-2 min-h-[44px] inline-flex items-center">Log in</a>
+        <a href="/login.html#register" class="bg-blue-600 hover:bg-blue-500 font-semibold px-3 sm:px-4 py-2 min-h-[44px] inline-flex items-center rounded-lg shadow-lg shadow-blue-900/40">Sign up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="rink-hero rink-lines relative overflow-hidden">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 grid lg:grid-cols-12 gap-10 items-center">
+        <div class="lg:col-span-7 space-y-6">
+          <p class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300 border border-sky-500/30 bg-sky-500/10 rounded-full px-3 py-1">
+            Free for coaches · No credit card
+          </p>
+          <h1 class="font-display text-4xl sm:text-6xl leading-[0.95] uppercase text-white">
+            Cut the clip.<br>
+            Send it to the player.<br>
+            <span class="text-sky-300">See if they watched.</span>
+          </h1>
+          <p class="text-lg sm:text-xl text-slate-300 max-w-xl leading-relaxed">
+            Coaching Hockey Made Easy is an easy coaching workspace for head coaches and assistants. Pull snippets out of team video, mark them up, assign them by email, and keep goals, notes, and a rink whiteboard in one place.
+          </p>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+            <a href="/login.html#register" class="inline-flex justify-center bg-blue-600 hover:bg-blue-500 font-bold px-6 py-3 rounded-lg shadow-lg shadow-blue-900/50">
+              Register as head coach — free
+            </a>
+            <a href="/login.html" class="inline-flex justify-center text-slate-300 hover:text-white px-2 py-3 text-sm">
+              Already have an account? Log in
+            </a>
+          </div>
+          <p class="text-sm text-slate-400">Head coaches create the team. Assistants join through the roster you add inside the workspace.</p>
+        </div>
+
+        <aside class="lg:col-span-5">
+          <div class="ice-card border border-slate-700 rounded-2xl overflow-hidden">
+            <div class="stripe px-4 py-2 border-b border-slate-700 flex items-center justify-between text-[11px] uppercase tracking-widest text-slate-400">
+              <span>Shift clip</span>
+              <span class="text-red-400">● Rec</span>
+            </div>
+            <div class="p-5 space-y-4">
+              <div class="aspect-video rounded-xl bg-slate-950 border border-slate-700 relative overflow-hidden">
+                <video
+                  class="absolute inset-0 w-full h-full object-cover"
+                  src="/img/app-demo.mp4"
+                  poster="/img/logo.jpeg"
+                  controls
+                  playsinline
+                  muted
+                  loop
+                  preload="metadata"
+                  aria-label="App demo video"
+                ></video>
+              </div>
+              <ul class="text-sm text-slate-300 space-y-2">
+                <li class="flex gap-2"><span class="text-sky-400">→</span> Overlay arrows and spoken notes on the play with the quick snippet maker</li>
+                <li class="flex gap-2"><span class="text-sky-400">→</span> Save to the library, then email the snippet to players with a click</li>
+                <li class="flex gap-2"><span class="text-sky-400">→</span> Track link opens and watch time</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="border-y border-slate-800 bg-slate-900/70">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid sm:grid-cols-3 gap-6">
+        <div>
+          <h2 class="font-display text-xl uppercase text-white">The 11 p.m. film pile</h2>
+          <p class="text-slate-400 text-sm mt-2 leading-relaxed">Full-game files are too long to send. Players need the shift, not the intermission.</p>
+        </div>
+        <div>
+          <h2 class="font-display text-xl uppercase text-white">“Did they even watch it?”</h2>
+          <p class="text-slate-400 text-sm mt-2 leading-relaxed">A group-chat video dump tells you nothing. Assignments show whether the link was opened and how long they watched.</p>
+        </div>
+        <div>
+          <h2 class="font-display text-xl uppercase text-white">Staff on different pages</h2>
+          <p class="text-slate-400 text-sm mt-2 leading-relaxed">Head coaches and assistants share the same workspace: video, roster, whiteboard, goals, and notes with the right visibility.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20 space-y-12">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">What you actually get</p>
+        <h2 class="font-display text-3xl sm:text-4xl uppercase mt-2">Built for the bench, not a generic sports CRM</h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <article class="ice-card border border-slate-700 rounded-2xl p-6 space-y-3">
+          <h3 class="font-display text-2xl uppercase text-sky-200">Video snippet creator</h3>
+          <p class="text-slate-300 leading-relaxed">Open a team video, cut the clip you care about in seconds, and mark it up before it hits the library. Overlays cover arrows and place-and-speak notes. Add tags, mute the game audio when you need to, and save the snippet.</p>
+        </article>
+        <article class="ice-card border border-slate-700 rounded-2xl p-6 space-y-3">
+          <h3 class="font-display text-2xl uppercase text-sky-200">Library you can actually find</h3>
+          <p class="text-slate-300 leading-relaxed">Search the video library and filter by tag so “PP, left-side entry” does not disappear into last month’s folder.</p>
+        </article>
+        <article class="ice-card border border-slate-700 rounded-2xl p-6 space-y-3">
+          <h3 class="font-display text-2xl uppercase text-sky-200">Assign to players</h3>
+          <p class="text-slate-300 leading-relaxed">Send a snippet with an email link. Then check whether the player opened it and how much watch time they put in — useful before you ask “did you see the weak-side winger?”</p>
+        </article>
+        <article class="ice-card border border-slate-700 rounded-2xl p-6 space-y-3">
+          <h3 class="font-display text-2xl uppercase text-sky-200">Player goals</h3>
+          <p class="text-slate-300 leading-relaxed">Keep development tight: each player can have up to three active goals, so the conversation stays on a few habits instead of a laundry list.</p>
+        </article>
+        <article class="ice-card border border-slate-700 rounded-2xl p-6 space-y-3">
+          <h3 class="font-display text-2xl uppercase text-sky-200">Team whiteboard</h3>
+          <p class="text-slate-300 leading-relaxed">White ice plus a rink. Drop text, X, and O pins, and add an optional link on a pin when the diagram should point at a clip or a note.</p>
+        </article>
+        <article class="ice-card border border-slate-700 rounded-2xl p-6 space-y-3">
+          <h3 class="font-display text-2xl uppercase text-sky-200">Notes, roster, staff</h3>
+          <p class="text-slate-300 leading-relaxed">Coach notes stay personal for assistants; the head coach sees the team’s notes. Head coaches add players and assistant coaches on the roster.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="how" class="bg-slate-950 border-y border-slate-800">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+        <h2 class="font-display text-3xl sm:text-4xl uppercase mb-10">How a week with Coaching Hockey Made Easy looks</h2>
+        <ol class="grid md:grid-cols-4 gap-6">
+          <li class="relative pl-4 border-l-2 border-blue-600">
+            <p class="font-display text-sm uppercase text-blue-400">01</p>
+            <h3 class="font-semibold text-white mt-1">Register the team</h3>
+            <p class="text-sm text-slate-400 mt-2">Head coach creates the workspace. No credit card. Add assistants and players on the roster.</p>
+          </li>
+          <li class="relative pl-4 border-l-2 border-sky-400">
+            <p class="font-display text-sm uppercase text-sky-300">02</p>
+            <h3 class="font-semibold text-white mt-1">Cut film into snippets</h3>
+            <p class="text-sm text-slate-400 mt-2">Record the shift in seconds, overlay the read, tag it, mute if needed, save it to the library.</p>
+          </li>
+          <li class="relative pl-4 border-l-2 border-red-500">
+            <p class="font-display text-sm uppercase text-red-400">03</p>
+            <h3 class="font-semibold text-white mt-1">Assign the homework</h3>
+            <p class="text-sm text-slate-400 mt-2">Email the snippet. Track opens and watch time so pre-ice talk is based on who actually saw the clip.</p>
+          </li>
+          <li class="relative pl-4 border-l-2 border-slate-500">
+            <p class="font-display text-sm uppercase text-slate-400">04</p>
+            <h3 class="font-semibold text-white mt-1">Teach on the ice sheet</h3>
+            <p class="text-sm text-slate-400 mt-2">Whiteboard the structure, keep three active goals, write notes the staff can use.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="blog" class="bg-slate-950 border-y border-slate-800">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+          <div class="max-w-2xl">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">The Book of Coach Kenny</p>
+            <h2 class="font-display text-3xl sm:text-4xl uppercase mt-2">Stories that make coaches want the next chapter</h2>
+            <p class="text-slate-400 mt-3 leading-relaxed">Tips, bench stories, and the messy truth of developing kids, written so another hockey coach will actually come back to this site.</p>
+          </div>
+          <a href="/blog/" class="text-sky-300 hover:text-white font-semibold shrink-0">All stories →</a>
+        </div>
+
+        <article class="ice-card border border-slate-700 rounded-2xl overflow-hidden grid lg:grid-cols-12">
+          <div class="lg:col-span-4 stripe border-b lg:border-b-0 lg:border-r border-slate-700 p-6 sm:p-8 flex flex-col justify-between">
+            <div>
+              <p class="text-[11px] uppercase tracking-[0.2em] text-sky-300">Chapter one</p>
+              <p class="text-sm text-slate-400 mt-3">August 2026 · 6 min read</p>
+            </div>
+            <p class="text-sm text-slate-400 mt-8">By Coach Kenny · Halton Hills</p>
+          </div>
+          <div class="lg:col-span-8 p-6 sm:p-8 space-y-4">
+            <h3 class="font-display text-3xl uppercase text-white">
+              <a href="/blog/the-book-of-coach-kenny/" class="hover:text-sky-200">The Book of Coach Kenny</a>
+            </h3>
+            <p class="text-slate-300 leading-relaxed">A smaller player sat on a playoff bench and said he was scared. One sentence later he scored. This is my story: baseball, hockey, construction job sites, three kids in sport, and why kids cannot be afraid to make mistakes.</p>
+            <a href="/blog/the-book-of-coach-kenny/" class="inline-flex items-center gap-2 text-sky-300 hover:text-white font-semibold">
+              Read the opening chapter
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+      <div class="ice-card border border-slate-700 rounded-2xl p-8 sm:p-12 grid lg:grid-cols-2 gap-8 items-center">
+        <div>
+          <h2 class="font-display text-3xl sm:text-4xl uppercase">Free, fast, and built to save you time — no sales calls attached</h2>
+          <p class="text-slate-300 mt-4 leading-relaxed">Coaching Hockey Made Easy is free for coaches. Register as a head coach, verify your email, and start a workspace. No trial clock and no card on file.</p>
+        </div>
+        <div class="flex flex-col items-start sm:items-end gap-3">
+          <a href="/login.html#register" class="w-full sm:w-auto text-center bg-blue-600 hover:bg-blue-500 font-bold px-6 py-3 rounded-lg shadow-lg shadow-blue-900/50">
+            Create your free account
+          </a>
+          <a href="/login.html" class="text-sm text-slate-400 hover:text-white">Already have an account? Log in</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800 px-4 py-8 text-center text-sm text-slate-500">
+    <p>Coaching Hockey Made Easy · Coaching workspace for head coaches and assistants</p>
+    <p class="mt-2"><a href="/blog/" class="hover:text-slate-300">Blog</a> · <a href="/login.html" class="hover:text-slate-300">Log in</a> · <a href="/login.html#register" class="hover:text-slate-300">Register</a></p>
+  </footer>
+</body>
+</html>

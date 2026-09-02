@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verifying Account...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex items-center justify-center min-h-screen bg-slate-900 text-slate-100 p-4">
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md text-center space-y-4 shadow-xl">
+    <div id="spinner" class="mx-auto w-14 h-14 rounded-xl overflow-hidden border border-slate-600 animate-pulse">
+      <img src="/img/logo.jpeg" alt="" class="w-full h-full object-cover">
+    </div>
+    <h1 id="verifyTitle" class="text-xl font-bold">Verifying Your Account</h1>
+    <p id="verifyMsg" class="text-slate-400 text-sm">Please wait while we confirm your email address...</p>
+    <a id="loginRedirect" href="/login.html" class="hidden inline-block bg-blue-600 hover:bg-blue-500 font-bold px-6 py-2 rounded-lg">Proceed to Login</a>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    async function executeVerification() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      if (!token) {
+        document.getElementById('verifyTitle').innerText = 'Verification Failed';
+        document.getElementById('verifyMsg').innerText = 'Missing verification token.';
+        return;
+      }
+
+      try {
+        const res = await apiFetch(`/auth/verify?token=${token}`);
+        document.getElementById('verifyTitle').innerText = 'Email Verified!';
+        document.getElementById('verifyMsg').innerText = res.message;
+        document.getElementById('spinner').classList.add('hidden');
+        document.getElementById('loginRedirect').classList.remove('hidden');
+      } catch (err) {
+        document.getElementById('verifyTitle').innerText = 'Verification Error';
+        document.getElementById('verifyMsg').innerText = err.message;
+      }
+    }
+    executeVerification();
+  </script>
+</body>
+</html>

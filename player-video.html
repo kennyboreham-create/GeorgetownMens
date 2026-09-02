@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player Video Review</title>
+  <link rel="icon" href="/img/logo.jpeg" type="image/jpeg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 p-4 sm:p-6 max-w-4xl mx-auto space-y-6 min-h-screen">
+
+  <header class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-slate-700 pb-4">
+    <div class="min-w-0">
+      <h1 id="videoTitle" class="text-xl sm:text-2xl font-bold break-words">Assigned Video Review</h1>
+      <p id="assignedByNote" class="text-xs text-slate-400">Loading details...</p>
+    </div>
+    <span class="self-start bg-blue-900/60 text-blue-400 border border-blue-700/50 text-xs font-bold px-3 py-1 rounded-full">Player Direct Access</span>
+  </header>
+
+  <div class="relative bg-black rounded-xl overflow-hidden aspect-video border border-slate-800 flex justify-center items-center">
+    <video id="playerVideo" controls class="w-full h-full relative z-0"></video>
+    <iframe id="playerYouTube" class="hidden absolute inset-0 z-[1] w-full h-full border-0" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    <div id="playerVideoOverlayLayer" class="absolute inset-0 z-[5] w-full h-full pointer-events-none"></div>
+  </div>
+
+  <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl space-y-2">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Coach Note</h3>
+    <p id="coachNoteText" class="text-slate-200 italic">No notes attached.</p>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/overlayReplay.js"></script>
+  <script>
+    let accessToken = null;
+    let snippetEndTime = null;
+    let watchTracker = null;
+
+    function startWatchTracking(videoEl) {
+      let playingSince = null;
+      let pendingSeconds = 0;
+
+      const flushWatchProgress = () => {
+        if (pendingSeconds <= 0 || !accessToken) return;
+        const seconds = pendingSeconds;
+        pendingSeconds = 0;
+
+        fetch(`${API_BASE_URL}/player/access-video/${accessToken}/watch`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ watchDurationSeconds: seconds }),
+          keepalive: true
+        }).catch(() => {});
+      };
+
+      videoEl.addEventListener('play', () => {
+        playingSince = Date.now();
+      });
+
+      videoEl.addEventListener('pause', () => {
+        if (playingSince) {
+          pendingSeconds += Math.floor((Date.now() - playingSince) / 1000);
+          playingSince = null;
+          flushWatchProgress();
+        }
+      });
+
+      videoEl.addEventListener('timeupdate', () => {
+        if (snippetEndTime != null && videoEl.currentTime >= snippetEndTime) {
+          videoEl.pause();
+        }
+      });
+
+      watchTracker = setInterval(() => {
+        if (playingSince) {
+          pendingSeconds += 1;
+          if (pendingSeconds >= 10) {
+            flushWatchProgress();
+          }
+        }
+      }, 1000);
+
+      window.addEventListener('beforeunload', () => {
+        if (playingSince) {
+          pendingSeconds += Math.floor((Date.now() - playingSince) / 1000);
+          playingSince = null;
+        }
+        flushWatchProgress();
+      });
+    }
+
+    /** Approximate watch time for YouTube embeds (no reliable play/pause events without IFrame API). */
+    function startYouTubeWatchTracking(clipSeconds) {
+      const estimated = Math.max(1, Math.floor(Number(clipSeconds) || 0));
+      let reported = false;
+
+      const reportOnce = () => {
+        if (reported || !accessToken) return;
+        reported = true;
+        fetch(`${API_BASE_URL}/player/access-video/${accessToken}/watch`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ watchDurationSeconds: estimated }),
+          keepalive: true
+        }).catch(() => {});
+      };
+
+      // Credit estimated clip length once the page has been open briefly.
+      setTimeout(reportOnce, Math.min(15000, Math.max(3000, estimated * 200)));
+      window.addEventListener('beforeunload', reportOnce);
+    }
+
+    async function loadPlayerVideo() {
+      const urlParams = new URLSearchParams(window.location.search);
+      accessToken = urlParams.get('token');
+
+      if (!accessToken) {
+        document.getElementById('videoTitle').innerText = 'Invalid Link';
+        return;
+      }
+
+      try {
+        const data = await apiFetch(`/player/access-video/${accessToken}`);
+        document.getElementById('videoTitle').innerText = data.video.title;
+        document.getElementById('assignedByNote').innerText = `Assigned by Coach ${data.assignedBy ? data.assignedBy.name : ''}`;
+        document.getElementById('coachNoteText').innerText = data.note || 'No additional note provided.';
+
+        const videoElement = document.getElementById('playerVideo');
+        const ytFrame = document.getElementById('playerYouTube');
+        const overlayLayer = document.getElementById('playerVideoOverlayLayer');
+        const video = data.video;
+
+        const ytEmbed = !hasStoredVideoFile(video) && !video.parentVideoId
+          ? toYouTubeEmbedUrl(video.url, {
+              startSeconds: video.clipStartSeconds,
+              endSeconds: video.clipEndSeconds
+            })
+          : null;
+
+        if (ytEmbed && ytFrame) {
+          videoElement.classList.add('hidden');
+          videoElement.removeAttribute('src');
+          if (overlayLayer) overlayLayer.classList.add('hidden');
+          ytFrame.src = ytEmbed;
+          ytFrame.classList.remove('hidden');
+          const clipLen = (video.clipEndSeconds != null && video.clipStartSeconds != null)
+            ? Math.max(1, video.clipEndSeconds - video.clipStartSeconds)
+            : 60;
+          startYouTubeWatchTracking(clipLen);
+          return;
+        }
+
+        if (ytFrame) {
+          ytFrame.classList.add('hidden');
+          ytFrame.removeAttribute('src');
+        }
+
+        const playableUrl = hasStoredVideoFile(video) || video.parentVideoId || (video.url && video.url.includes('/stream'))
+          ? `${API_BASE_URL}/player/access-video/${accessToken}/stream`
+          : video.url;
+        videoElement.src = playableUrl;
+
+        if (video.isSnippet && video.startTime != null) {
+          videoElement.onloadedmetadata = () => {
+            videoElement.currentTime = video.startTime;
+          };
+          snippetEndTime = video.endTime ?? null;
+        }
+
+        if (video.muteAudio) {
+          videoElement.muted = true;
+        }
+
+        if (video.isSnippet && Array.isArray(video.overlays) && video.overlays.length) {
+          attachSnippetOverlayReplay(
+            videoElement,
+            overlayLayer,
+            video.overlays,
+            video.startTime || 0
+          );
+        }
+
+        startWatchTracking(videoElement);
+      } catch (err) {
+        document.getElementById('videoTitle').innerText = 'Error Loading Video';
+        document.getElementById('coachNoteText').innerText = err.message;
+      }
+    }
+
+    loadPlayerVideo();
+  </script>
+</body>
+</html>
